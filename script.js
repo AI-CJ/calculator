@@ -32,7 +32,24 @@ document.addEventListener('keydown', (e) => {
     operand2 = '';
     operator = '';
     display.value = '';
+  } else if (value === '=') {
+  if (operator && currentInput) {
+    operand2 = currentInput;
+    let result;
+    try {
+      if (operator === '/' && Number(operand2) === 0) {
+        result = "Error: Div by 0";
+      } else {
+        result = eval(`${operand1} ${operator} ${operand2}`);
+      }
+    } catch {
+      result = "Error";
+    }
+    display.value = result;
+    currentInput = result.toString();
+    resultDisplayed = true;
   }
+}
 });
 
 document.addEventListener('keydown', (e) => {
