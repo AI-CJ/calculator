@@ -71,13 +71,23 @@ function handleInput(value) {
 function calculate(op1, op, op2) {
   let num1 = parseFloat(op1);
   let num2 = parseFloat(op2);
+
   if (op === '/' && num2 === 0) return "Err";
-  try {
-    let res = eval(`${num1} ${op} ${num2}`);
-    return Number.isFinite(res) ? parseFloat(res.toFixed(8)) : "Err";
-  } catch {
-    return "Err";
+
+  let res;
+  switch (op) {
+    case '+': res = num1 + num2; break;
+    case '-': res = num1 - num2; break;
+    case '*': res = num1 * num2; break;
+    case '/': res = num1 / num2; break;
+    default: return "Err";
   }
+
+  // If result is not finite (NaN or Infinity), return Err
+  if (!isFinite(res)) return "Err";
+
+  // Remove trailing .0 if integer
+  return Number(res.toFixed(8)).toString();
 }
 
 // Visual feedback for button press/click

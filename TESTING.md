@@ -12,8 +12,8 @@
 - [ ] Multiple decimals in one number are prevented
 
 ## Error Handling
-- [ ] Division by zero gives "Error: Div by 0"
-- [ ] Invalid input gives "Error"
+- [ ] Division by zero gives "Err"
+- [ ] Invalid input gives "Err"
 
 ## Actions
 - [ ] C clears the display

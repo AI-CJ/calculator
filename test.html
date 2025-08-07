@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Calculator Tests</title>
+</head>
+<body>
+  <h1>Calculator Function Tests</h1>
+  <pre id="test-results"></pre>
+  <script>
+    // Copy your operate() function here!
+    function operate(a, b, operator) {
+        switch (operator) {
+            case '+': return a + b;
+            case '-': return a - b;
+            case '*': return a * b;
+            case '/':
+                if (b === 0) return "Err";
+                return Math.round((a / b) * 1000000000) / 1000000000;
+            default: return 'Error';
+  }
+}
+
+    function assertEqual(actual, expected, message) {
+      if (actual === expected) {
+        return `✅ ${message}\n`;
+      } else {
+        return `❌ ${message} (Expected: ${expected}, Got: ${actual})\n`;
+      }
+    }
+
+    let results = '';
+    results += assertEqual(operate(2, 2, '+'), 4, "2 + 2 = 4");
+    results += assertEqual(operate(5, 3, '-'), 2, "5 - 3 = 2");
+    results += assertEqual(operate(3, 4, '*'), 12, "3 * 4 = 12");
+    results += assertEqual(operate(10, 2, '/'), 5, "10 / 2 = 5");
+    results += assertEqual(operate(2.5, 0.5, '+'), 3, "2.5 + 0.5 = 3");
+    results += assertEqual(operate(1, 0, '/'), "Err", "1 / 0 = Err");
+
+    document.getElementById('test-results').textContent = results;
+  </script>
+</body>
+</html>
