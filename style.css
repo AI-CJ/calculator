@@ -1,12 +1,14 @@
 body {
   background: #181818;
+  min-height: 100vh;
   display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
+  flex-direction: column;   /* Ensure vertical layout */
+  justify-content: center;  /* Center vertically */
+  align-items: center;      /* Center horizontally */
   margin: 0;
   font-family: 'Segoe UI', Arial, sans-serif;
   transition: background 0.3s;
+  overflow-x: hidden;
 }
 
 #theme-toggle {
