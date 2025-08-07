@@ -49,3 +49,17 @@ body {
 .calculator-buttons button:hover {
     background: #666;
 }
+
+@media (max-width : 400px) {
+    .calculator { 
+        width: 95vw;
+        padding: 1rem;
+    }
+    .calculator-display {
+        font-size: 1.4rem;
+    }
+    .calculator-buttons button {
+        font-size: 1rem;
+        padding: 0.6rem;
+    }
+}
