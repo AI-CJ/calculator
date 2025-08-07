@@ -15,7 +15,7 @@ body {
   top: 50%;
   transform: translateY(-50%);
   z-index: 2;
-  background: #fff8;
+  background: #ffffffcc;
   border: none;
   border-radius: 8px 0 0 8px;
   padding: 0.5rem 0.75rem;
@@ -52,7 +52,8 @@ body {
   letter-spacing: 1px;
   box-sizing: border-box;
   outline: none;
-  transition: background 0.3s, color 0.3s;
+  box-shadow: 0 2px 8px #0002;
+  transition: background 0.3s, color 0.3s, box-shadow 0.3s, border 0.3s;
 }
 
 .calculator-buttons {
@@ -69,21 +70,27 @@ body {
   background: #444;
   color: #fff;
   cursor: pointer;
-  transition: background 0.2s, transform 0.1s;
+  transition: background 0.15s, color 0.15s, transform 0.10s;
   box-shadow: 0 2px 8px #0002;
   font-weight: 500;
+  position: relative;
+  user-select: none;
 }
-.calculator-buttons button:active {
-  background: #666;
-  transform: scale(0.97);
+.calculator-buttons button:active,
+.calculator-buttons button.active {
+  background: #00e6a8 !important;
+  color: #222 !important;
+  transform: scale(0.96);
 }
+
 .calculator-buttons .equals {
   background: #00e6a8;
   color: #111;
-  grid-column: span 1;
 }
-.calculator-buttons .equals:active {
-  background: #00b688;
+.calculator-buttons .equals:active,
+.calculator-buttons .equals.active {
+  background: #00b688 !important;
+  color: #fff !important;
 }
 .calculator-buttons .clear,
 .calculator-buttons .del {
@@ -91,37 +98,58 @@ body {
   color: #fff;
 }
 .calculator-buttons .clear:active,
-.calculator-buttons .del:active {
-  background: #a81414;
+.calculator-buttons .del:active,
+.calculator-buttons .clear.active,
+.calculator-buttons .del.active {
+  background: #a81414 !important;
+  color: #fff !important;
 }
 
+/* --- Light Mode --- */
 body.light {
-  background: #f7f7f7;
+  background: #ececec;
 }
 body.light .calculator {
-  background: #fff;
+  background: #f6f7fa;
   color: #222;
+  box-shadow: 0 6px 48px #b7c6e6aa;
 }
 body.light .calculator-display {
-  background: #eee;
-  color: #222;
+  background: #f3f2fa;
+  color: #333;
+  border: 1.5px solid #c0c6d6;
+  box-shadow: 0 2px 12px #ccd6ee33;
 }
 body.light .calculator-buttons button {
-  background: #f1f1f1;
+  background: #e0e2e7;
   color: #222;
-  box-shadow: 0 2px 8px #0001;
+  box-shadow: 0 2px 8px #cbd8ee22;
+}
+body.light .calculator-buttons button:active,
+body.light .calculator-buttons button.active {
+  background: #00b688 !important;
+  color: #fff !important;
 }
 body.light .calculator-buttons .equals {
   background: #00e6a8;
   color: #fff;
 }
-body.light .calculator-buttons .equals:active {
-  background: #00b688;
+body.light .calculator-buttons .equals:active,
+body.light .calculator-buttons .equals.active {
+  background: #00b688 !important;
+  color: #fff !important;
 }
 body.light .calculator-buttons .clear,
 body.light .calculator-buttons .del {
   background: #e62828;
   color: #fff;
+}
+body.light .calculator-buttons .clear:active,
+body.light .calculator-buttons .del:active,
+body.light .calculator-buttons .clear.active,
+body.light .calculator-buttons .del.active {
+  background: #a81414 !important;
+  color: #fff !important;
 }
 
 @media (max-width: 400px) {
