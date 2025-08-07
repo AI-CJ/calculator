@@ -12,19 +12,21 @@ body {
 }
 
 #theme-toggle {
-  position: absolute;
-  left: calc(50% - 220px);
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 2;
+  position: fixed;
+  left: 1rem;
+  top: 1rem;
+  z-index: 10;
   background: #ffffffcc;
   border: none;
-  border-radius: 8px 0 0 8px;
+  border-radius: 8px;
   padding: 0.5rem 0.75rem;
   cursor: pointer;
   font-size: 1.5rem;
   transition: background 0.2s;
+  box-shadow: 0 2px 8px #0003;
 }
+
+
 #theme-toggle:hover {
   background: #fffbe8;
 }
@@ -167,4 +169,11 @@ body.light .calculator-buttons .del.active {
     font-size: 1.05rem;
     padding: 0.6rem 0;
   }
+  #theme-toggle {
+    font-size: 1.2rem;
+    padding: 0.4rem 0.6rem;
+    left: 0.5rem;
+    top: 0.5rem;
+  }
+}
 }
