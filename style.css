@@ -53,6 +53,20 @@ body {
 .calculator-buttons button:focus {
     outline: 2px solid #00e6e6;
 }
+body.light {
+  background: #f7f7f7;
+}
+body.dark {
+  background: #111;
+}
+.calculator.light {
+  background: #fff;
+  color: #222;
+}
+.calculator.dark {
+  background: #222;
+  color: #fff;
+}
 
 @media (max-width : 400px) {
     .calculator { 

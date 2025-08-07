@@ -71,3 +71,14 @@ document.addEventListener('keydown', (e) => {
     display.value = '';
   }
 });
+const themeToggle = document.getElementById('theme-toggle');
+themeToggle.addEventListener('click', () => {
+  document.body.classList.toggle('dark');
+  document.body.classList.toggle('light');
+  document.querySelector('.calculator').classList.toggle('dark');
+  document.querySelector('.calculator').classList.toggle('light');
+  themeToggle.textContent = document.body.classList.contains('dark') ? '🌙' : '☀️';
+});
+// Set the default theme to dark
+document.body.classList.add('dark');
+document.querySelector('.calculator').classList.add('dark');
