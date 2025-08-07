@@ -1,83 +1,140 @@
 body {
-    background: #f7f7f7;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    margin: 0;
-    font-family: Arial, sans-serif;
+  background: #181818;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  transition: background 0.3s;
+}
+
+#theme-toggle {
+  position: absolute;
+  left: calc(50% - 220px);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  background: #fff8;
+  border: none;
+  border-radius: 8px 0 0 8px;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  font-size: 1.5rem;
+  transition: background 0.2s;
+}
+#theme-toggle:hover {
+  background: #fffbe8;
 }
 
 .calculator {
-    background: #222;
-    border-radius: 12px;
-    padding: 2rem;
-    box-shadow: 0 4px 40px rgba(0, 0, 0, 0.2);
-    width: 330px;
+  background: #222;
+  border-radius: 16px;
+  padding: 2.2rem 2.2rem 1.5rem 2.2rem;
+  box-shadow: 0 6px 48px rgba(0,0,0,0.3);
+  width: 340px;
+  min-width: 280px;
+  position: relative;
+  transition: background 0.3s, color 0.3s;
 }
 
 .calculator-display {
-    width: 100%;
-    height: 3rem;
-    font-size: 2rem;
-    text-align: right;
-    margin-bottom: 1rem;
-    border: none;
-    border-radius: 6px;
-    padding: 0.5rem;
-    background: #333;
-    color: #fff;
+  width: 100%;
+  height: 3.2rem;
+  font-size: 2.2rem;
+  text-align: right;
+  margin-bottom: 1.2rem;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 0.9rem;
+  background: #333;
+  color: #fff;
+  letter-spacing: 1px;
+  box-sizing: border-box;
+  outline: none;
+  transition: background 0.3s, color 0.3s;
 }
 
 .calculator-buttons {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 0.5rem;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.7rem;
 }
 
 .calculator-buttons button {
-    font-size: 1.25rem;
-    padding: 1rem;
-    border: none;
-    border-radius: 8px;
-    background: #444;
-    color: #fff;
-    cursor: pointer;
-    transition: background 0.2s;
+  font-size: 1.5rem;
+  padding: 1.2rem 0;
+  border: none;
+  border-radius: 10px;
+  background: #444;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  box-shadow: 0 2px 8px #0002;
+  font-weight: 500;
+}
+.calculator-buttons button:active {
+  background: #666;
+  transform: scale(0.97);
+}
+.calculator-buttons .equals {
+  background: #00e6a8;
+  color: #111;
+  grid-column: span 1;
+}
+.calculator-buttons .equals:active {
+  background: #00b688;
+}
+.calculator-buttons .clear,
+.calculator-buttons .del {
+  background: #e62828;
+  color: #fff;
+}
+.calculator-buttons .clear:active,
+.calculator-buttons .del:active {
+  background: #a81414;
 }
 
-.calculator-buttons button:hover {
-    background: #666;
-}
-
-.calculator-buttons button:focus {
-    outline: 2px solid #00e6e6;
-}
 body.light {
   background: #f7f7f7;
 }
-body.dark {
-  background: #111;
-}
-.calculator.light {
+body.light .calculator {
   background: #fff;
   color: #222;
 }
-.calculator.dark {
-  background: #222;
+body.light .calculator-display {
+  background: #eee;
+  color: #222;
+}
+body.light .calculator-buttons button {
+  background: #f1f1f1;
+  color: #222;
+  box-shadow: 0 2px 8px #0001;
+}
+body.light .calculator-buttons .equals {
+  background: #00e6a8;
+  color: #fff;
+}
+body.light .calculator-buttons .equals:active {
+  background: #00b688;
+}
+body.light .calculator-buttons .clear,
+body.light .calculator-buttons .del {
+  background: #e62828;
   color: #fff;
 }
 
-@media (max-width : 400px) {
-    .calculator { 
-        width: 95vw;
-        padding: 1rem;
-    }
-    .calculator-display {
-        font-size: 1.4rem;
-    }
-    .calculator-buttons button {
-        font-size: 1rem;
-        padding: 0.6rem;
-    }
+@media (max-width: 400px) {
+  .calculator {
+    width: 99vw;
+    min-width: 0;
+    padding: 1rem 0.3rem 1rem 0.3rem;
+  }
+  .calculator-display {
+    font-size: 1.3rem;
+  }
+  .calculator-buttons button {
+    font-size: 1.05rem;
+    padding: 0.6rem 0;
+  }
 }
