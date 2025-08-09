@@ -1,111 +1,67 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Calculator</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>ASU Calculator</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <!-- Theme toggle -->
-  <button id="theme-toggle" aria-label="Toggle dark/light theme" title="Toggle theme">🌙</button>
-
-  <div class="calculator" role="region" aria-label="Calculator">
-    <!-- Header toolbar -->
-    <div class="calc-header">
-      <div class="toolbar-left">
-        <button id="history-toggle" class="tool-btn" aria-controls="history-panel" aria-expanded="false" aria-label="Toggle history" title="Toggle history">🕘</button>
-        <button id="deg-toggle" class="tool-btn" aria-pressed="true" aria-label="Toggle degrees/radians" title="Degrees/Radians">DEG</button>
+  <div class="container">
+    <!-- Calculator -->
+    <section class="calc" aria-label="Calculator">
+      <div class="screen">
+        <div class="mini" id="mini"></div>
+        <div class="display" id="display" aria-live="polite">0</div>
+        <div class="mem-indicator" id="memIndicator"></div>
       </div>
-      <div class="toolbar-right">
-        <button id="copy-btn" class="tool-btn" aria-label="Copy result" title="Copy result">📋</button>
+
+      <div class="keys" id="keys" role="grid" aria-label="Calculator keypad">
+        <!-- Memory row -->
+        <button class="key" data-mem="mc" aria-label="Memory Clear">MC</button>
+        <button class="key" data-mem="mr" aria-label="Memory Recall">MR</button>
+        <button class="key" data-mem="mplus" aria-label="Memory Plus">M+</button>
+        <button class="key" data-mem="mminus" aria-label="Memory Minus">M−</button>
+
+        <!-- Control row -->
+        <button class="key warn" id="clearKey" data-clear>AC</button>
+        <button class="key" data-sign>±</button>
+        <button class="key" data-percent>%</button>
+        <button class="key op" data-op="/">÷</button>
+
+        <!-- Digits/operators -->
+        <button class="key" data-digit="7">7</button>
+        <button class="key" data-digit="8">8</button>
+        <button class="key" data-digit="9">9</button>
+        <button class="key op" data-op="*">×</button>
+
+        <button class="key" data-digit="4">4</button>
+        <button class="key" data-digit="5">5</button>
+        <button class="key" data-digit="6">6</button>
+        <button class="key op" data-op="-">−</button>
+
+        <button class="key" data-digit="1">1</button>
+        <button class="key" data-digit="2">2</button>
+        <button class="key" data-digit="3">3</button>
+        <button class="key op" data-op="+">+</button>
+
+        <button class="key span-2" data-digit="0">0</button>
+        <button class="key" data-dot>.</button>
+        <button class="key equals" data-equals>=</button>
       </div>
-    </div>
+    </section>
 
-    <!-- Display -->
-    <input
-      type="text"
-      id="calculator-display"
-      class="calculator-display"
-      aria-label="Calculator display"
-      readonly
-      inputmode="numeric"
-      autocomplete="off"
-      spellcheck="false"
-    />
-
-    <!-- Screen reader live region -->
-    <div id="sr-status" class="sr-only" aria-live="polite" aria-atomic="true"></div>
-
-    <!-- Scientific buttons -->
-    <div class="advanced-buttons" role="group" aria-label="Scientific buttons">
-      <button data-value="(" aria-label="Left parenthesis">(</button>
-      <button data-value=")" aria-label="Right parenthesis">)</button>
-      <button data-value="%" aria-label="Percent">%</button>
-      <button data-value="^" aria-label="Exponent">^</button>
-
-      <button data-value="sin" aria-label="Sine">sin</button>
-      <button data-value="cos" aria-label="Cosine">cos</button>
-      <button data-value="tan" aria-label="Tangent">tan</button>
-      <button data-value="sqrt" aria-label="Square root">√</button>
-
-      <button data-value="ln" aria-label="Natural log">ln</button>
-      <button data-value="log" aria-label="Log base 10">log</button>
-      <button data-value="pi" aria-label="Pi">π</button>
-      <button data-value="ANS" aria-label="Last answer">Ans</button>
-
-      <button data-value="MC" aria-label="Memory clear">MC</button>
-      <button data-value="MR" aria-label="Memory recall">MR</button>
-      <button data-value="M+" aria-label="Memory add">M+</button>
-      <button data-value="M-" aria-label="Memory subtract">M−</button>
-    </div>
-
-    <!-- Basic buttons laid out like a real calculator -->
-    <div class="calculator-buttons" role="group" aria-label="Calculator buttons">
-      <!-- Row 1 -->
-      <button data-value="C" class="clear" aria-label="Clear">C</button>
-      <button data-value="DEL" class="del" aria-label="Delete">DEL</button>
-      <button data-value="/" aria-label="Divide">÷</button>
-      <button data-value="*" aria-label="Multiply">×</button>
-
-      <!-- Row 2 -->
-      <button data-value="7">7</button>
-      <button data-value="8">8</button>
-      <button data-value="9">9</button>
-      <button data-value="-" aria-label="Subtract">−</button>
-
-      <!-- Row 3 -->
-      <button data-value="4">4</button>
-      <button data-value="5">5</button>
-      <button data-value="6">6</button>
-      <button data-value="+" aria-label="Add">+</button>
-
-      <!-- Row 4 -->
-      <button data-value="1">1</button>
-      <button data-value="2">2</button>
-      <button data-value="3">3</button>
-      <button data-value="=" class="equals">=</button>
-
-      <!-- Row 5 -->
-      <button data-value="0" class="zero">0</button>
-      <button data-value="." aria-label="Decimal point">.</button>
-      <!-- equals spans into this row at right -->
-    </div>
-
-    <!-- History drawer -->
-    <aside id="history-panel" class="history-panel" aria-hidden="true" role="region" aria-label="Calculation history">
-      <header class="history-header">
-        <h2 class="history-title">History</h2>
-        <div class="history-actions">
-          <button id="history-clear" class="tool-btn small" aria-label="Clear history" title="Clear history">Clear</button>
-          <button id="history-close" class="tool-btn small" aria-label="Close history" title="Close">✕</button>
-        </div>
-      </header>
-      <ul id="history-list" class="history-list" role="list"></ul>
-      <p class="history-hint">Click an item to reuse it.</p>
+    <!-- History -->
+    <aside class="panel history" aria-label="History">
+      <div class="panel-header">History</div>
+      <ul id="historyList" class="hist-list" aria-live="polite" aria-label="Recent calculations"></ul>
     </aside>
   </div>
 
-  <script src="script.js"></script>
+  <div class="footer">
+    Keyboard: 0–9 . + − * /, Enter/Return or =, Backspace, Escape, %.
+  </div>
+
+  <script src="app.js" defer></script>
 </body>
 </html>

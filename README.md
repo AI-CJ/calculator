@@ -1,55 +1,68 @@
-# Calculator Web App
+# ASU Calculator (HTML/CSS/JS)
 
-Live Demo: https://calculator-aicj.netlify.app/
+A clean, beginner-friendly calculator built with just HTML, CSS, and vanilla JavaScript. It’s designed to be portfolio-ready while staying approachable for a software engineering student.
 
-## Overview
+Features
+- Basic operations: add, subtract, multiply, divide
+- Decimals, sign toggle (±), percent
+- Memory: MC, MR, M+, M− (persists via localStorage)
+- History: recent calculations; click any item to reuse the result
+- Keyboard support: 0–9, ., + − * /, Enter/Return or =, Backspace, Escape, %
+- Responsive design: works on phone and desktop
+- No eval; simple state machine logic
 
-A modern, accessible calculator with a scientific mode, expression parsing (parentheses, functions, exponent), keyboard support, history with persistence, and dark/light themes that follow system preferences.
+Tech Stack
+- HTML: semantic structure and ARIA where appropriate
+- CSS: responsive layout and theming (dark/light aware)
+- JavaScript: DOM events + a small state machine
 
-## Highlights for Recruiters
+Project Structure
+- index.html — main app UI
+- styles.css — styling
+- app.js — calculator logic and UI behavior
+- test.html — lightweight test runner (no frameworks)
+- TESTING.md — how to validate features (manual and automated)
+- README.md — this file
+- .gitignore — ignores common local files
 
-- Expression engine (Shunting Yard + RPN), no libraries
-- Scientific features: sin, cos, tan, ln, log, sqrt, π, e, exponent (^), Ans
-- DEG/RAD toggle for trigonometry
-- Memory (MC, MR, M+, M−)
-- History drawer (persistent, reusable)
-- Accessibility: screen reader announcements, focus-visible, ARIA
-- Keyboard-first UX and responsive design
-- Automated test page for evaluator
+Getting Started
+- Option 1: Double‑click index.html to open it in your browser.
+- Option 2 (recommended during dev): use a simple local server (for example, VS Code Live Server).
 
-## How to Use
+Keyboard Shortcuts
+- Digits: 0–9
+- Decimal: .
+- Operators: +, -, *, /
+- Equals: Enter or =
+- Clear: Escape (AC)
+- Backspace: delete a single character
+- Percent: %
 
-- Type or click to build expressions. Examples:
-  - (2+3)*4
-  - sqrt(9)
-  - 2^10
-  - ln(e)
-  - sin(30) with DEG on (or RAD to use radians)
-- Press C to clear, DEL to backspace; Enter or = to evaluate.
-- Ans inserts the last result.
-- Memory: MC, MR, M+, M−.
-- Toggle dark/light (🌙/☀️), history (🕘), and DEG/RAD.
+Code Overview
+- State is stored in a single object (displayValue, firstOperand, operator, memory, etc.).
+- Button clicks and key presses update state and refresh the display.
+- Immediate-execute model (like basic handheld calculators): when you chain operators, it computes the previous operation immediately.
+- Results are formatted to about 12 significant digits to reduce floating‑point noise.
 
-## Accessibility
+Accessibility
+- ARIA roles/labels added to primary interactive areas (keypad, display).
+- Live region for result updates.
+- History is keyboard-focusable (list items are standard <li>).
 
-- Display is readonly (not disabled) and updates a polite aria-live region.
-- Buttons have accessible names (e.g., ÷/×/−).
-- Focus-visible outlines for keyboard navigation.
+How to Test
+- Automated: open test.html in a browser. It runs a small test suite with pass/fail output.
+- Manual: see TESTING.md for a thorough test plan with steps and expected results.
 
-## Persistence
+Deploy (GitHub Pages)
+1. Push this folder to a GitHub repository.
+2. Settings → Pages → Deploy from branch (main), folder: / (root) or /docs if you move files there.
+3. Wait for the link to become active and add it to your resume/portfolio.
 
-- Theme, DEG/RAD, last result, and history are saved in localStorage.
+Future Ideas
+- Scientific functions (sin, cos, tan, sqrt)
+- Parentheses and an expression parser
+- Theme toggle
+- A progressive web app (PWA) wrapper
 
-## Run Locally
-
-1. Clone the repo:
-   git clone https://github.com/ai-cj/calculator.git
-2. Open `index.html` in your browser.
-
-## Tests
-
-Open `test.html` in a browser to see evaluator tests run.
-
-## Tech
-
-- HTML5, CSS3, JavaScript (ES6)
+License
+- MIT (add a LICENSE file if you want to publish publicly).

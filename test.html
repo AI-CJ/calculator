@@ -1,143 +1,311 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Calculator Tests</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>ASU Calculator — Tests</title>
   <style>
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; padding: 1rem; line-height: 1.5; }
-    .ok { color: #0a8a4b; }
-    .fail { color: #b00020; }
-    pre { background: #f6f7fa; padding: 1rem; border-radius: 8px; overflow: auto; }
+    :root {
+      --bg: #0f172a;
+      --panel: #0b1220;
+      --text: #e5e7eb;
+      --muted: #94a3b8;
+      --ok: #22c55e;
+      --bad: #ef4444;
+      --border: #1f2937;
+    }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100dvh;
+      display: grid;
+      place-items: start center;
+      padding: 16px;
+    }
+    .wrap {
+      width: 100%;
+      max-width: 900px;
+      display: grid;
+      gap: 12px;
+    }
+    .card {
+      background: linear-gradient(180deg, #0f1627, var(--panel));
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+    }
+    h1 { margin: 0 0 4px; font-size: 22px; }
+    .muted { color: var(--muted); font-size: 14px; }
+    .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    button {
+      appearance: none;
+      border: 1px solid var(--border);
+      background: #172033;
+      color: var(--text);
+      padding: 8px 12px;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:hover { filter: brightness(1.06); }
+    .summary { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .badge { padding: 4px 8px; border-radius: 999px; font-weight: 700; font-size: 12px; }
+    .ok { background: rgba(34,197,94,0.12); color: var(--ok); border: 1px solid rgba(34,197,94,0.25); }
+    .bad { background: rgba(239,68,68,0.12); color: var(--bad); border: 1px solid rgba(239,68,68,0.25); }
+    .list { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+    .item { padding: 10px 12px; border: 1px dashed var(--border); border-radius: 8px; background: rgba(255,255,255,0.02); }
+    .item.ok { border-color: rgba(34,197,94,0.35); }
+    .item.bad { border-color: rgba(239,68,68,0.35); }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
+    .small { font-size: 12px; color: var(--muted); }
+    details { margin-top: 8px; }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
-  <h1>Calculator Function Tests</h1>
-  <pre id="test-results"></pre>
-  <script>
-    'use strict';
+  <div class="wrap">
+    <div class="card">
+      <h1>ASU Calculator — Test Runner</h1>
+      <div class="muted">Simple, framework‑free tests executed in your browser.</div>
+      <div class="row" style="margin-top: 8px;">
+        <button id="runBtn">Run tests again</button>
+        <button id="resetBtn">Reset calculator state</button>
+      </div>
+    </div>
 
-    // Minimal copy of evaluator
-    function evaluateExpression(expr, deg = true, ansVal = 0) {
-      const tokens = tokenize(expr);
-      const rpn = toRPN(tokens);
-      return evalRPN(rpn, deg, ansVal);
-    }
-    function tokenize(expr) {
-      const tokens = []; let i = 0;
-      const isD = c => /[0-9]/.test(c), isA = c => /[a-zA-Z]/.test(c), isS = c => /\s/.test(c);
-      while (i < expr.length) {
-        const c = expr[i];
-        if (isS(c)) { i++; continue; }
-        if (isD(c) || c === '.') { let s=c; i++; while (i<expr.length && (isD(expr[i])||expr[i]==='.')) s+=expr[i++]; tokens.push({type:'number', value: parseFloat(s)}); continue; }
-        if ('+-*/^()%'.includes(c)) { tokens.push({type: map(c), value: c}); i++; continue; }
-        if (c==='×'){tokens.push({type:'operator',value:'*'}); i++; continue;}
-        if (c==='÷'){tokens.push({type:'operator',value:'/'}); i++; continue;}
-        if (c==='−'){tokens.push({type:'operator',value:'-'}); i++; continue;}
-        if (c==='π'){tokens.push({type:'const',value:'pi'}); i++; continue;}
-        if (isA(c)) { let s=c; i++; while(i<expr.length && /[a-zA-Z]/.test(expr[i])) s+=expr[i++]; const id=s.toLowerCase();
-          if (['sin','cos','tan','log','ln','sqrt'].includes(id)) tokens.push({type:'func', value:id});
-          else if (['pi','e','ans'].includes(id)) tokens.push({type:'const', value:id});
-          else throw new Error('id '+id); continue;
+    <div id="summary" class="card summary">
+      <span class="badge ok" id="passCount">Passed: 0</span>
+      <span class="badge bad" id="failCount">Failed: 0</span>
+      <span class="muted" id="elapsed">Time: 0 ms</span>
+    </div>
+
+    <div class="card">
+      <ul id="results" class="list"></ul>
+      <details>
+        <summary class="muted">App DOM (hidden)</summary>
+        <!-- Hidden app DOM to satisfy app.js queries -->
+        <div id="app-root" class="small">
+          <div id="mini"></div>
+          <div id="display">0</div>
+          <div id="memIndicator"></div>
+          <button id="clearKey">AC</button>
+          <ul id="historyList"></ul>
+          <div id="keys"></div>
+        </div>
+      </details>
+    </div>
+
+    <div class="card small">
+      Tip: open DevTools (F12) to see console logs if a test fails.
+    </div>
+  </div>
+
+  <!-- App code (defer ensures DOM above is parsed first) -->
+  <script src="app.js" defer></script>
+
+  <!-- Test harness -->
+  <script defer>
+    // Tiny test helper
+    const Tests = [];
+    function test(name, fn) { Tests.push({ name, fn }); }
+    function expect(actual) {
+      return {
+        toBe(expected) {
+          if (actual !== expected) throw new Error(`Expected ${actual} to be ${expected}`);
+        },
+        toBeCloseTo(expected, eps = 1e-9) {
+          if (Math.abs(actual - expected) > eps)
+            throw new Error(`Expected ${actual} to be close to ${expected}`);
         }
-        throw new Error('char '+c);
-      }
-      const out=[]; for (let j=0;j<tokens.length;j++){const t=tokens[j]; const prev=out[out.length-1];
-        if (t.type==='operator' && t.value==='-' && (!prev || prev.type==='operator' || prev.type==='lparen')) out.push({type:'operator', value:'u-'});
-        else if (t.type==='operator' && t.value==='%' && prev && (prev.type==='number'||prev.type==='const'||prev.type==='rparen')) out.push({type:'operator', value:'u%'}); 
-        else out.push(t);
-      }
-      return out;
-      function map(ch){ if(ch==='(') return 'lparen'; if(ch===')') return 'rparen'; return 'operator'; }
+      };
     }
-    function toRPN(tokens) {
-      const out=[], ops=[];
-      const prec=op=> op==='u-'||op==='u%'?5 : op==='^'?4 : op==='*'||op==='/'?3 : op==='+'||op==='-'?2 : 1;
-      const right=op=> op==='^'||op==='u-'||op==='u%';
-      for(const t of tokens){
-        if(t.type==='number'||t.type==='const'){ out.push(t); continue; }
-        if(t.type==='func'){ ops.push(t); continue; }
-        if(t.type==='operator'){
-          while(ops.length){
-            const top=ops[ops.length-1];
-            if(top.type==='func'){ out.push(ops.pop()); continue; }
-            if(top.type==='operator' && ((prec(top.value)>prec(t.value)) || (prec(top.value)===prec(t.value) && !right(t.value)))) { out.push(ops.pop()); continue; }
-            break;
-          }
-          ops.push(t); continue;
+    function resetState() {
+      // Provided by app.js
+      allClear();
+      state.history = [];
+      state.memory = 0;
+      try { localStorage.setItem("asu_calc_memory", "0"); } catch {}
+      // Clear history UI
+      const list = document.getElementById("historyList");
+      if (list) list.innerHTML = "";
+    }
+
+    // Define tests
+    test("Addition (12 + 7 = 19)", () => {
+      resetState();
+      inputDigit("1"); inputDigit("2");
+      handleOperator("+");
+      inputDigit("7");
+      handleEquals();
+      expect(state.displayValue).toBe("19");
+    });
+
+    test("Subtraction (9 - 3 = 6)", () => {
+      resetState();
+      inputDigit("9");
+      handleOperator("-");
+      inputDigit("3");
+      handleEquals();
+      expect(state.displayValue).toBe("6");
+    });
+
+    test("Multiplication (4 × 2.5 = 10)", () => {
+      resetState();
+      inputDigit("4");
+      handleOperator("*");
+      inputDigit("2");
+      inputDot();
+      inputDigit("5");
+      handleEquals();
+      expect(state.displayValue).toBe("10");
+    });
+
+    test("Division (10 ÷ 4 = 2.5)", () => {
+      resetState();
+      inputDigit("1"); inputDigit("0");
+      handleOperator("/");
+      inputDigit("4");
+      handleEquals();
+      expect(state.displayValue).toBe("2.5");
+    });
+
+    test("Chaining is immediate-execute (3 + 4 × 5 = 35)", () => {
+      resetState();
+      inputDigit("3");
+      handleOperator("+");
+      inputDigit("4");
+      handleOperator("*"); // computes 3+4
+      inputDigit("5");
+      handleEquals();
+      expect(state.displayValue).toBe("35");
+    });
+
+    test("Decimals: 0.1 + 0.2 = 0.3 (formatted)", () => {
+      resetState();
+      state.displayValue = "0.1";
+      handleOperator("+");
+      state.displayValue = "0.2";
+      handleEquals();
+      expect(state.displayValue).toBe("0.3");
+    });
+
+    test("Percent relative to first operand (200 + 10% = 220)", () => {
+      resetState();
+      inputDigit("2"); inputDigit("0"); inputDigit("0");
+      handleOperator("+");
+      inputDigit("1"); inputDigit("0");
+      inputPercent();     // becomes 20
+      handleEquals();     // 200 + 20
+      expect(state.displayValue).toBe("220");
+    });
+
+    test("Standalone percent (50% = 0.5)", () => {
+      resetState();
+      inputDigit("5"); inputDigit("0");
+      inputPercent();
+      expect(state.displayValue).toBe("0.5");
+    });
+
+    test("Toggle sign", () => {
+      resetState();
+      inputDigit("2"); inputDigit("5"); // 25
+      toggleSign();                     // -25
+      expect(state.displayValue).toBe("-25");
+      toggleSign();                     // 25
+      expect(state.displayValue).toBe("25");
+    });
+
+    test("Backspace deletes one char", () => {
+      resetState();
+      inputDigit("1"); inputDigit("2"); inputDigit("3");
+      backspace();
+      expect(state.displayValue).toBe("12");
+    });
+
+    test("Divide by zero shows Error", () => {
+      resetState();
+      inputDigit("5");
+      handleOperator("/");
+      inputDigit("0");
+      handleEquals();
+      expect(state.displayValue).toBe("Error");
+    });
+
+    test("Memory M+/MR/M-/MC sequence", () => {
+      resetState();
+      // M+ with 5 -> MR == 5
+      state.displayValue = "5";
+      handleMemory("mplus");
+      handleMemory("mr");
+      expect(state.displayValue).toBe("5");
+      // M+ again -> MR == 10
+      handleMemory("mplus");
+      handleMemory("mr");
+      expect(state.displayValue).toBe("10");
+      // M- with 2 -> MR == 8
+      state.displayValue = "2";
+      handleMemory("mminus");
+      handleMemory("mr");
+      expect(state.displayValue).toBe("8");
+      // MC -> MR == 0
+      handleMemory("mc");
+      handleMemory("mr");
+      expect(state.displayValue).toBe("0");
+    });
+
+    test("Clear key label toggles between AC and C", () => {
+      resetState();
+      const clearBtn = document.getElementById("clearKey");
+      expect(clearBtn.textContent).toBe("AC");
+      inputDigit("9");
+      expect(clearBtn.textContent).toBe("C");
+      handleClear(); // clear entry
+      expect(clearBtn.textContent).toBe("AC");
+    });
+
+    // Runner
+    function runTests() {
+      const resultsEl = document.getElementById("results");
+      const passEl = document.getElementById("passCount");
+      const failEl = document.getElementById("failCount");
+      const elapsedEl = document.getElementById("elapsed");
+      resultsEl.innerHTML = "";
+      let passed = 0, failed = 0;
+      const t0 = performance.now();
+      for (const { name, fn } of Tests) {
+        try {
+          resetState();
+          fn();
+          passed++;
+          const li = document.createElement("li");
+          li.className = "item ok";
+          li.textContent = "✓ " + name;
+          resultsEl.appendChild(li);
+        } catch (err) {
+          failed++;
+          console.error("Test failed:", name, err);
+          const li = document.createElement("li");
+          li.className = "item bad";
+          li.innerHTML = '<div>✗ ' + name + '</div><div class="small"><code>' + ((err && err.message) || err) + '</code></div>';
+          resultsEl.appendChild(li);
         }
-        if(t.type==='lparen'){ ops.push(t); continue; }
-        if(t.type==='rparen'){ while(ops.length && ops[ops.length-1].type!=='lparen') out.push(ops.pop()); if(!ops.length) throw Error('paren');
-          ops.pop(); if(ops.length && ops[ops.length-1].type==='func') out.push(ops.pop()); continue; }
       }
-      while(ops.length){ const t=ops.pop(); if(t.type==='lparen' || t.type==='rparen') throw Error('paren'); out.push(t); }
-      return out;
-    }
-    function evalRPN(rpn, deg, ansVal) {
-      const st=[]; const toRad=x=>x*Math.PI/180;
-      for(const t of rpn){
-        if(t.type==='number'){ st.push(t.value); continue; }
-        if(t.type==='const'){ st.push(t.value==='pi'?Math.PI: t.value==='e'?Math.E: ansVal); continue; }
-        if(t.type==='operator'){
-          if(t.value==='u-'){ const a=st.pop(); if(a===undefined) throw Error('stack'); st.push(-a); continue; }
-          if(t.value==='u%'){ const a=st.pop(); if(a===undefined) throw Error('stack'); st.push(a/100); continue; }
-          const b=st.pop(), a=st.pop(); if(a===undefined||b===undefined) throw Error('stack');
-          switch(t.value){ case '+': st.push(a+b); break; case '-': st.push(a-b); break; case '*': st.push(a*b); break; case '/': if(b===0) return Infinity; st.push(a/b); break; case '^': st.push(Math.pow(a,b)); break; default: throw Error('op'); }
-          continue;
-        }
-        if(t.type==='func'){
-          const a=st.pop(); if(a===undefined) throw Error('stack');
-          switch(t.value){
-            case 'sin': st.push(Math.sin(deg?toRad(a):a)); break;
-            case 'cos': st.push(Math.cos(deg?toRad(a):a)); break;
-            case 'tan': { const v=Math.tan(deg?toRad(a):a); if(!Number.isFinite(v)) throw Error('domain'); st.push(v); break; }
-            case 'log': if(a<=0) throw Error('domain'); st.push(Math.log10(a)); break;
-            case 'ln': if(a<=0) throw Error('domain'); st.push(Math.log(a)); break;
-            case 'sqrt': if(a<0) throw Error('domain'); st.push(Math.sqrt(a)); break;
-            default: throw Error('func');
-          }
-          continue;
-        }
-        throw Error('token');
-      }
-      if(st.length!==1) throw Error('inv');
-      return st[0];
+      const t1 = performance.now();
+      passEl.textContent = 'Passed: ' + passed;
+      failEl.textContent = 'Failed: ' + failed;
+      elapsedEl.textContent = 'Time: ' + Math.round(t1 - t0) + ' ms';
     }
 
-    // Test helpers
-    function assertEqual(actual, expected, message) {
-      const ok = (Number.isFinite(actual) && Number.isFinite(expected))
-        ? Math.abs(actual - expected) < 1e-9
-        : actual === expected;
-      return (ok ? '✅ ' : '❌ ') + message + (ok ? '' : ` (Expected: ${expected}, Got: ${actual})`) + '\n';
-    }
+    document.getElementById("runBtn").addEventListener("click", runTests);
+    document.getElementById("resetBtn").addEventListener("click", resetState);
 
-    let results = '';
-    // Basic arithmetic
-    results += assertEqual(evaluateExpression('2+2'), 4, '2 + 2 = 4');
-    results += assertEqual(evaluateExpression('5-3'), 2, '5 - 3 = 2');
-    results += assertEqual(evaluateExpression('3*4'), 12, '3 * 4 = 12');
-    results += assertEqual(evaluateExpression('10/2'), 5, '10 / 2 = 5');
-
-    // Decimals, precedence, parentheses
-    results += assertEqual(evaluateExpression('2.5+0.5'), 3, '2.5 + 0.5 = 3');
-    results += assertEqual(evaluateExpression('2+3*4'), 14, 'Operator precedence');
-    results += assertEqual(evaluateExpression('(2+3)*4'), 20, 'Parentheses');
-
-    // Functions, constants, exponent
-    results += assertEqual(evaluateExpression('sqrt(9)'), 3, '√(9) = 3');
-    results += assertEqual(evaluateExpression('ln(e)'), 1, 'ln(e) = 1');
-    results += assertEqual(evaluateExpression('log(1000)'), 3, 'log10(1000) = 3');
-    results += assertEqual(evaluateExpression('2^5'), 32, '2^5 = 32');
-    results += assertEqual(evaluateExpression('sin(30)', true), 0.5, 'sin(30°) = 0.5 (DEG)');
-
-    // Percent (postfix)
-    results += assertEqual(evaluateExpression('50%'), 0.5, '50% = 0.5');
-
-    // Division by zero -> Infinity (caller maps to Err)
-    results += assertEqual(evaluateExpression('1/0'), Infinity, '1 / 0 -> Infinity');
-
-    document.getElementById('test-results').textContent = results;
+    // Initial run after app.js initializes
+    window.addEventListener("DOMContentLoaded", () => {
+      setTimeout(runTests, 0);
+    });
   </script>
 </body>
 </html>
