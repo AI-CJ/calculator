@@ -3,39 +3,133 @@
 <head>
   <meta charset="UTF-8" />
   <title>Calculator Tests</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; padding: 1rem; line-height: 1.5; }
+    .ok { color: #0a8a4b; }
+    .fail { color: #b00020; }
+    pre { background: #f6f7fa; padding: 1rem; border-radius: 8px; overflow: auto; }
+  </style>
 </head>
 <body>
   <h1>Calculator Function Tests</h1>
   <pre id="test-results"></pre>
   <script>
-    // Copy your operate() function here!
-    function operate(a, b, operator) {
-        switch (operator) {
-            case '+': return a + b;
-            case '-': return a - b;
-            case '*': return a * b;
-            case '/':
-                if (b === 0) return "Err";
-                return Math.round((a / b) * 1000000000) / 1000000000;
-            default: return 'Error';
-  }
-}
+    'use strict';
 
-    function assertEqual(actual, expected, message) {
-      if (actual === expected) {
-        return `✅ ${message}\n`;
-      } else {
-        return `❌ ${message} (Expected: ${expected}, Got: ${actual})\n`;
+    // Minimal copy of evaluator logic from script.js
+    function evaluateExpression(expr, deg = true, ansVal = 0) {
+      const tokens = tokenize(expr);
+      const rpn = toRPN(tokens);
+      return evalRPN(rpn, deg, ansVal);
+    }
+    function tokenize(expr) {
+      const tokens = []; let i = 0;
+      const isD = c => /[0-9]/.test(c), isA = c => /[a-zA-Z]/.test(c), isS = c => /\s/.test(c);
+      while (i < expr.length) {
+        const c = expr[i];
+        if (isS(c)) { i++; continue; }
+        if (isD(c) || c === '.') { let s=c; i++; while (i<expr.length && (isD(expr[i])||expr[i]==='.')) s+=expr[i++]; tokens.push({type:'number', value: parseFloat(s)}); continue; }
+        if ('+-*/^()%'.includes(c)) { tokens.push({type: map(c), value: c}); i++; continue; }
+        if (c==='×'){tokens.push({type:'operator',value:'*'}); i++; continue;}
+        if (c==='÷'){tokens.push({type:'operator',value:'/'}); i++; continue;}
+        if (c==='−'){tokens.push({type:'operator',value:'-'}); i++; continue;}
+        if (c==='π'){tokens.push({type:'const',value:'pi'}); i++; continue;}
+        if (isA(c)) { let s=c; i++; while(i<expr.length && /[a-zA-Z]/.test(expr[i])) s+=expr[i++]; const id=s.toLowerCase();
+          if (['sin','cos','tan','log','ln','sqrt'].includes(id)) tokens.push({type:'func', value:id});
+          else if (['pi','e','ans'].includes(id)) tokens.push({type:'const', value:id});
+          else throw new Error('id '+id); continue;
+        }
+        throw new Error('char '+c);
       }
+      const out=[]; for (let j=0;j<tokens.length;j++){const t=tokens[j]; const pv=out[out.length-1];
+        if (t.type==='operator' && t.value==='-' && (!pv || pv.type==='operator' || pv.type==='lparen')) out.push({type:'operator', value:'u-'});
+        else out.push(t);
+      }
+      return out;
+      function map(ch){ if(ch==='(') return 'lparen'; if(ch===')') return 'rparen'; return 'operator'; }
+    }
+    function toRPN(tokens) {
+      const out=[], ops=[]; const prec=op=>op==='u-'?5:op==='^'?4:op==='%'?3:op==='*'||op==='/'?2:op==='+'||op==='-'?1:0;
+      const right=op=>op==='^'||op==='u-';
+      for(const t of tokens){
+        if(t.type==='number'||t.type==='const'){ out.push(t); continue; }
+        if(t.type==='func'){ ops.push(t); continue; }
+        if(t.type==='operator'){
+          while(ops.length){
+            const top=ops[ops.length-1];
+            if(top.type==='func'){ out.push(ops.pop()); continue; }
+            if(top.type==='operator' && ((prec(top.value)>prec(t.value)) || (prec(top.value)===prec(t.value) && !right(t.value)))) { out.push(ops.pop()); continue; }
+            break;
+          }
+          ops.push(t); continue;
+        }
+        if(t.type==='lparen'){ ops.push(t); continue; }
+        if(t.type==='rparen'){ while(ops.length && ops[ops.length-1].type!=='lparen') out.push(ops.pop()); if(!ops.length) throw Error('paren');
+          ops.pop(); if(ops.length && ops[ops.length-1].type==='func') out.push(ops.pop()); continue; }
+      }
+      while(ops.length){ const t=ops.pop(); if(t.type==='lparen') throw Error('paren'); out.push(t); }
+      return out;
+    }
+    function evalRPN(rpn, deg, ansVal) {
+      const st=[]; const toRad=x=>x*Math.PI/180;
+      for(const t of rpn){
+        if(t.type==='number'){ st.push(t.value); continue; }
+        if(t.type==='const'){ st.push(t.value==='pi'?Math.PI: t.value==='e'?Math.E: ansVal); continue; }
+        if(t.type==='operator'){
+          if(t.value==='u-'){ const a=st.pop(); if(a===undefined) throw Error('stack'); st.push(-a); continue; }
+          const b=st.pop(), a=st.pop(); if(a===undefined||b===undefined) throw Error('stack');
+          switch(t.value){ case '+': st.push(a+b); break; case '-': st.push(a-b); break; case '*': st.push(a*b); break; case '/': if(b===0) return Infinity; st.push(a/b); break; case '^': st.push(Math.pow(a,b)); break; case '%': st.push(a%b); break; default: throw Error('op'); }
+          continue;
+        }
+        if(t.type==='func'){
+          const a=st.pop(); if(a===undefined) throw Error('stack');
+          switch(t.value){
+            case 'sin': st.push(Math.sin(deg?toRad(a):a)); break;
+            case 'cos': st.push(Math.cos(deg?toRad(a):a)); break;
+            case 'tan': { const v=Math.tan(deg?toRad(a):a); if(!Number.isFinite(v)) throw Error('domain'); st.push(v); break; }
+            case 'log': if(a<=0) throw Error('domain'); st.push(Math.log10(a)); break;
+            case 'ln': if(a<=0) throw Error('domain'); st.push(Math.log(a)); break;
+            case 'sqrt': if(a<0) throw Error('domain'); st.push(Math.sqrt(a)); break;
+            default: throw Error('func');
+          }
+          continue;
+        }
+        throw Error('token');
+      }
+      if(st.length!==1) throw Error('inv');
+      return st[0];
+    }
+
+    // Test helpers
+    function assertEqual(actual, expected, message) {
+      const ok = (Number.isFinite(actual) && Number.isFinite(expected))
+        ? Math.abs(actual - expected) < 1e-9
+        : actual === expected;
+      return (ok ? '✅ ' : '❌ ') + message + (ok ? '' : ` (Expected: ${expected}, Got: ${actual})`) + '\n';
     }
 
     let results = '';
-    results += assertEqual(operate(2, 2, '+'), 4, "2 + 2 = 4");
-    results += assertEqual(operate(5, 3, '-'), 2, "5 - 3 = 2");
-    results += assertEqual(operate(3, 4, '*'), 12, "3 * 4 = 12");
-    results += assertEqual(operate(10, 2, '/'), 5, "10 / 2 = 5");
-    results += assertEqual(operate(2.5, 0.5, '+'), 3, "2.5 + 0.5 = 3");
-    results += assertEqual(operate(1, 0, '/'), "Err", "1 / 0 = Err");
+    // Basic arithmetic
+    results += assertEqual(evaluateExpression('2+2'), 4, "2 + 2 = 4");
+    results += assertEqual(evaluateExpression('5 - 3'), 2, "5 - 3 = 2");
+    results += assertEqual(evaluateExpression('3*4'), 12, "3 * 4 = 12");
+    results += assertEqual(evaluateExpression('10/2'), 5, "10 / 2 = 5");
+
+    // Decimals, precedence, parentheses
+    results += assertEqual(evaluateExpression('2.5+0.5'), 3, "2.5 + 0.5 = 3");
+    results += assertEqual(evaluateExpression('2+3*4'), 14, "Operator precedence");
+    results += assertEqual(evaluateExpression('(2+3)*4'), 20, "Parentheses");
+
+    // Functions, constants, exponent
+    results += assertEqual(evaluateExpression('sqrt(9)'), 3, "√(9) = 3");
+    results += assertEqual(evaluateExpression('ln(e)'), 1, "ln(e) = 1");
+    results += assertEqual(evaluateExpression('log(1000)'), 3, "log10(1000) = 3");
+    results += assertEqual(evaluateExpression('2^5'), 32, "2^5 = 32");
+    results += assertEqual(evaluateExpression('sin(30)', true), 0.5, "sin(30°) = 0.5 (DEG)");
+
+    // Division by zero -> Infinity (caller maps to Err)
+    results += assertEqual(evaluateExpression('1/0'), Infinity, "1 / 0 -> Infinity");
 
     document.getElementById('test-results').textContent = results;
   </script>

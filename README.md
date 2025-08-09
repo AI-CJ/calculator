@@ -1,65 +1,55 @@
 # Calculator Web App
 
-**Live Demo:** [https://polite-rugelach-549c2f.netlify.app/]
+Live Demo: https://polite-rugelach-549c2f.netlify.app/
 
 ## Overview
 
-This is a web-based calculator built with HTML, CSS, and JavaScript. It’s fully responsive, accessible, and includes keyboard support and a dark/light theme toggle.
+A modern, accessible calculator with a scientific mode, expression parsing (parentheses, functions, exponent), keyboard support, history with persistence, and dark/light themes that follow system preferences.
 
-## Features
+## Highlights for Recruiters
 
-- **Basic arithmetic:** Add, subtract, multiply, divide
-- **Responsive design:** Works on phones, tablets, and desktops
-- **Keyboard support:** Type numbers and operations
-- **Dark/light mode:** User can toggle themes
-- **Accessibility:** ARIA labels and focus styles
-- **Input validation:** Prevents invalid input and division by zero
-- **Clear and Delete:** Easily fix mistakes
-- **Test suite:** Manual and automated tests
+- Expression engine (Shunting Yard + RPN), no libraries
+- Scientific features: sin, cos, tan, ln, log, sqrt, π, e, exponent (^), Ans
+- DEG/RAD toggle for trigonometry
+- Memory (MC, MR, M+, M−)
+- History drawer (persistent, reusable)
+- Accessibility: screen reader announcements, focus-visible, ARIA
+- Keyboard-first UX and responsive design
+- Automated test page for evaluator
 
 ## How to Use
 
-- Click buttons or use your keyboard to enter numbers and operations.
-- Press `C` or `c` to clear, `DEL` or `Backspace` to delete one character.
-- Toggle between dark and light themes using the 🌙/☀️ button.
+- Type or click to build expressions. Examples:
+  - (2+3)*4
+  - sqrt(9)
+  - 2^10
+  - ln(e)
+  - sin(30) with DEG on (or RAD to use radians)
+- Press C to clear, DEL to backspace; Enter or = to evaluate.
+- Ans inserts the last result.
+- Memory: MC, MR, M+, M−.
+- Toggle dark/light (🌙/☀️), history (🕘), and DEG/RAD.
 
-## How to Run Locally
+## Accessibility
 
-1. **Clone this repo:**
-git clone https://github.com/ai-cj/calculator.git
-2. **Open `index.html` in your browser.** No setup required!
+- Display is readonly (not disabled) and updates a polite aria-live region.
+- Buttons have accessible names (e.g., ÷/×/−).
+- Focus-visible outlines for keyboard navigation.
 
-## How I Built It
+## Persistence
 
-- **HTML & CSS:** Designed a clean, modern, and responsive UI.
-- **JavaScript:** Managed calculator logic, keyboard support, and theme toggling.
-- **Accessibility:** Used ARIA roles/labels and focus styles.
-- **Testing:** Wrote manual and automated tests for calculator functions.
-- **Deployment:** Live site deployed on Netlify.
+- Theme, DEG/RAD, last result, and history are saved in localStorage.
 
-## What I Learned
+## Run Locally
 
-- Building responsive layouts with CSS Grid and Flexbox
-- Managing state and input validation in JavaScript
-- Making web apps accessible and keyboard-friendly
-- Writing and using tests to ensure code quality
-- Using Git for version control and professional commit messages
-- Deploying projects for recruiters to see instantly
+1. Clone the repo:
+   git clone https://github.com/ai-cj/calculator.git
+2. Open `index.html` in your browser.
 
-## Tech Stack
+## Tests
 
-- HTML5
-- CSS3
-- JavaScript (ES6)
+Open `test.html` in a browser to see evaluator tests run.
 
-## Manual Test Plan
+## Tech
 
-See [TESTING.md](./TESTING.md)
-
-## Automated Tests
-
-Run `test.html` in your browser for test results.
-
-## Contact
-
-Built by [Your Name](https://www.linkedin.com/in/cjackley/)
+- HTML5, CSS3, JavaScript (ES6)
