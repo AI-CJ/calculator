@@ -1,16 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Calculator</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- Global theme toggle -->
+  <!-- Theme toggle -->
   <button id="theme-toggle" aria-label="Toggle dark/light theme" title="Toggle theme">🌙</button>
 
   <div class="calculator" role="region" aria-label="Calculator">
+    <!-- Header toolbar -->
     <div class="calc-header">
       <div class="toolbar-left">
         <button id="history-toggle" class="tool-btn" aria-controls="history-panel" aria-expanded="false" aria-label="Toggle history" title="Toggle history">🕘</button>
@@ -21,6 +22,7 @@
       </div>
     </div>
 
+    <!-- Display -->
     <input
       type="text"
       id="calculator-display"
@@ -30,12 +32,12 @@
       inputmode="numeric"
       autocomplete="off"
       spellcheck="false"
-    >
+    />
 
     <!-- Screen reader live region -->
     <div id="sr-status" class="sr-only" aria-live="polite" aria-atomic="true"></div>
 
-    <!-- Advanced/scientific buttons -->
+    <!-- Scientific buttons -->
     <div class="advanced-buttons" role="group" aria-label="Scientific buttons">
       <button data-value="(" aria-label="Left parenthesis">(</button>
       <button data-value=")" aria-label="Right parenthesis">)</button>
@@ -58,33 +60,39 @@
       <button data-value="M-" aria-label="Memory subtract">M−</button>
     </div>
 
-    <!-- Basic buttons -->
+    <!-- Basic buttons laid out like a real calculator -->
     <div class="calculator-buttons" role="group" aria-label="Calculator buttons">
+      <!-- Row 1 -->
+      <button data-value="C" class="clear" aria-label="Clear">C</button>
+      <button data-value="DEL" class="del" aria-label="Delete">DEL</button>
+      <button data-value="/" aria-label="Divide">÷</button>
+      <button data-value="*" aria-label="Multiply">×</button>
+
+      <!-- Row 2 -->
       <button data-value="7">7</button>
       <button data-value="8">8</button>
       <button data-value="9">9</button>
-      <button data-value="/" aria-label="Divide">÷</button>
+      <button data-value="-" aria-label="Subtract">−</button>
 
+      <!-- Row 3 -->
       <button data-value="4">4</button>
       <button data-value="5">5</button>
       <button data-value="6">6</button>
-      <button data-value="*" aria-label="Multiply">×</button>
+      <button data-value="+" aria-label="Add">+</button>
 
+      <!-- Row 4 -->
       <button data-value="1">1</button>
       <button data-value="2">2</button>
       <button data-value="3">3</button>
-      <button data-value="-" aria-label="Subtract">−</button>
-
-      <button data-value="0">0</button>
-      <button data-value="." aria-label="Decimal point">.</button>
       <button data-value="=" class="equals">=</button>
-      <button data-value="+" aria-label="Add">+</button>
 
-      <button data-value="C" class="clear" aria-label="Clear">C</button>
-      <button data-value="DEL" class="del" aria-label="Delete">DEL</button>
+      <!-- Row 5 -->
+      <button data-value="0" class="zero">0</button>
+      <button data-value="." aria-label="Decimal point">.</button>
+      <!-- equals spans into this row at right -->
     </div>
 
-    <!-- History panel (drawer) -->
+    <!-- History drawer -->
     <aside id="history-panel" class="history-panel" aria-hidden="true" role="region" aria-label="Calculation history">
       <header class="history-header">
         <h2 class="history-title">History</h2>

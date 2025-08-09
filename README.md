@@ -1,6 +1,6 @@
 # Calculator Web App
 
-Live Demo: https://polite-rugelach-549c2f.netlify.app/
+Live Demo: https://calculator-aicj.netlify.app/
 
 ## Overview
 

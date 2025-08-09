@@ -17,7 +17,7 @@
   <script>
     'use strict';
 
-    // Minimal copy of evaluator logic from script.js
+    // Minimal copy of evaluator
     function evaluateExpression(expr, deg = true, ansVal = 0) {
       const tokens = tokenize(expr);
       const rpn = toRPN(tokens);
@@ -42,16 +42,18 @@
         }
         throw new Error('char '+c);
       }
-      const out=[]; for (let j=0;j<tokens.length;j++){const t=tokens[j]; const pv=out[out.length-1];
-        if (t.type==='operator' && t.value==='-' && (!pv || pv.type==='operator' || pv.type==='lparen')) out.push({type:'operator', value:'u-'});
+      const out=[]; for (let j=0;j<tokens.length;j++){const t=tokens[j]; const prev=out[out.length-1];
+        if (t.type==='operator' && t.value==='-' && (!prev || prev.type==='operator' || prev.type==='lparen')) out.push({type:'operator', value:'u-'});
+        else if (t.type==='operator' && t.value==='%' && prev && (prev.type==='number'||prev.type==='const'||prev.type==='rparen')) out.push({type:'operator', value:'u%'}); 
         else out.push(t);
       }
       return out;
       function map(ch){ if(ch==='(') return 'lparen'; if(ch===')') return 'rparen'; return 'operator'; }
     }
     function toRPN(tokens) {
-      const out=[], ops=[]; const prec=op=>op==='u-'?5:op==='^'?4:op==='%'?3:op==='*'||op==='/'?2:op==='+'||op==='-'?1:0;
-      const right=op=>op==='^'||op==='u-';
+      const out=[], ops=[];
+      const prec=op=> op==='u-'||op==='u%'?5 : op==='^'?4 : op==='*'||op==='/'?3 : op==='+'||op==='-'?2 : 1;
+      const right=op=> op==='^'||op==='u-'||op==='u%';
       for(const t of tokens){
         if(t.type==='number'||t.type==='const'){ out.push(t); continue; }
         if(t.type==='func'){ ops.push(t); continue; }
@@ -68,7 +70,7 @@
         if(t.type==='rparen'){ while(ops.length && ops[ops.length-1].type!=='lparen') out.push(ops.pop()); if(!ops.length) throw Error('paren');
           ops.pop(); if(ops.length && ops[ops.length-1].type==='func') out.push(ops.pop()); continue; }
       }
-      while(ops.length){ const t=ops.pop(); if(t.type==='lparen') throw Error('paren'); out.push(t); }
+      while(ops.length){ const t=ops.pop(); if(t.type==='lparen' || t.type==='rparen') throw Error('paren'); out.push(t); }
       return out;
     }
     function evalRPN(rpn, deg, ansVal) {
@@ -78,8 +80,9 @@
         if(t.type==='const'){ st.push(t.value==='pi'?Math.PI: t.value==='e'?Math.E: ansVal); continue; }
         if(t.type==='operator'){
           if(t.value==='u-'){ const a=st.pop(); if(a===undefined) throw Error('stack'); st.push(-a); continue; }
+          if(t.value==='u%'){ const a=st.pop(); if(a===undefined) throw Error('stack'); st.push(a/100); continue; }
           const b=st.pop(), a=st.pop(); if(a===undefined||b===undefined) throw Error('stack');
-          switch(t.value){ case '+': st.push(a+b); break; case '-': st.push(a-b); break; case '*': st.push(a*b); break; case '/': if(b===0) return Infinity; st.push(a/b); break; case '^': st.push(Math.pow(a,b)); break; case '%': st.push(a%b); break; default: throw Error('op'); }
+          switch(t.value){ case '+': st.push(a+b); break; case '-': st.push(a-b); break; case '*': st.push(a*b); break; case '/': if(b===0) return Infinity; st.push(a/b); break; case '^': st.push(Math.pow(a,b)); break; default: throw Error('op'); }
           continue;
         }
         if(t.type==='func'){
@@ -111,25 +114,28 @@
 
     let results = '';
     // Basic arithmetic
-    results += assertEqual(evaluateExpression('2+2'), 4, "2 + 2 = 4");
-    results += assertEqual(evaluateExpression('5 - 3'), 2, "5 - 3 = 2");
-    results += assertEqual(evaluateExpression('3*4'), 12, "3 * 4 = 12");
-    results += assertEqual(evaluateExpression('10/2'), 5, "10 / 2 = 5");
+    results += assertEqual(evaluateExpression('2+2'), 4, '2 + 2 = 4');
+    results += assertEqual(evaluateExpression('5-3'), 2, '5 - 3 = 2');
+    results += assertEqual(evaluateExpression('3*4'), 12, '3 * 4 = 12');
+    results += assertEqual(evaluateExpression('10/2'), 5, '10 / 2 = 5');
 
     // Decimals, precedence, parentheses
-    results += assertEqual(evaluateExpression('2.5+0.5'), 3, "2.5 + 0.5 = 3");
-    results += assertEqual(evaluateExpression('2+3*4'), 14, "Operator precedence");
-    results += assertEqual(evaluateExpression('(2+3)*4'), 20, "Parentheses");
+    results += assertEqual(evaluateExpression('2.5+0.5'), 3, '2.5 + 0.5 = 3');
+    results += assertEqual(evaluateExpression('2+3*4'), 14, 'Operator precedence');
+    results += assertEqual(evaluateExpression('(2+3)*4'), 20, 'Parentheses');
 
     // Functions, constants, exponent
-    results += assertEqual(evaluateExpression('sqrt(9)'), 3, "√(9) = 3");
-    results += assertEqual(evaluateExpression('ln(e)'), 1, "ln(e) = 1");
-    results += assertEqual(evaluateExpression('log(1000)'), 3, "log10(1000) = 3");
-    results += assertEqual(evaluateExpression('2^5'), 32, "2^5 = 32");
-    results += assertEqual(evaluateExpression('sin(30)', true), 0.5, "sin(30°) = 0.5 (DEG)");
+    results += assertEqual(evaluateExpression('sqrt(9)'), 3, '√(9) = 3');
+    results += assertEqual(evaluateExpression('ln(e)'), 1, 'ln(e) = 1');
+    results += assertEqual(evaluateExpression('log(1000)'), 3, 'log10(1000) = 3');
+    results += assertEqual(evaluateExpression('2^5'), 32, '2^5 = 32');
+    results += assertEqual(evaluateExpression('sin(30)', true), 0.5, 'sin(30°) = 0.5 (DEG)');
+
+    // Percent (postfix)
+    results += assertEqual(evaluateExpression('50%'), 0.5, '50% = 0.5');
 
     // Division by zero -> Infinity (caller maps to Err)
-    results += assertEqual(evaluateExpression('1/0'), Infinity, "1 / 0 -> Infinity");
+    results += assertEqual(evaluateExpression('1/0'), Infinity, '1 / 0 -> Infinity');
 
     document.getElementById('test-results').textContent = results;
   </script>
