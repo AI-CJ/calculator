@@ -2,215 +2,22 @@
   "use strict";
 
   var displayEl = document.getElementById("display");
-  var trailEl = document.getElementById("trail");
   var keysEl = document.getElementById("keys");
 
-  var calc = {
-    displayValue: "0",
-    firstOperand: null,
-    operator: null, // "+", "-", "*", "/"
-    waitingForSecondOperand: false,
+  // State: build a tokenized expression; evaluate only on "=" with precedence
+  var state = {
+    tokens: [],          // e.g., [2, "+", 3, "*", 4]
+    currentEntry: "0",   // string user is typing
+    justEvaluated: false,
     error: false
   };
 
-  function updateDisplay() {
-    displayEl.textContent = calc.displayValue;
-    updateTrail();
-    updateClearKey();
-    updateActiveOperator();
+  function last(arr) {
+    return arr.length ? arr[arr.length - 1] : undefined;
   }
 
-  function updateTrail() {
-    var t = "";
-    if (!calc.error && calc.firstOperand !== null && calc.operator !== null) {
-      var opSymbol = toSymbol(calc.operator);
-      t = formatNumber(calc.firstOperand) + " " + opSymbol;
-    }
-    trailEl.textContent = t;
-  }
-
-  function updateClearKey() {
-    var clearBtn = keysEl.querySelector('[data-action="clear"]');
-    var shouldShowC =
-      calc.displayValue !== "0" ||
-      calc.firstOperand !== null ||
-      calc.operator !== null ||
-      calc.waitingForSecondOperand ||
-      calc.error;
-    clearBtn.textContent = shouldShowC ? "C" : "AC";
-    clearBtn.setAttribute("aria-label", shouldShowC ? "Clear Entry" : "All Clear");
-  }
-
-  function updateActiveOperator() {
-    var ops = keysEl.querySelectorAll('[data-action="operator"]');
-    for (var i = 0; i < ops.length; i++) {
-      ops[i].classList.remove("active");
-    }
-    if (calc.operator && calc.waitingForSecondOperand) {
-      for (var j = 0; j < ops.length; j++) {
-        if (ops[j].dataset.operator === calc.operator) {
-          ops[j].classList.add("active");
-          break;
-        }
-      }
-    }
-  }
-
-  function inputDigit(d) {
-    if (calc.error) return;
-    if (calc.waitingForSecondOperand) {
-      calc.displayValue = d;
-      calc.waitingForSecondOperand = false;
-    } else {
-      if (calc.displayValue === "0") {
-        calc.displayValue = d;
-      } else {
-        // Limit length to avoid overflow
-        if (calc.displayValue.replace("-", "").length < 16) {
-          calc.displayValue += d;
-        }
-      }
-    }
-  }
-
-  function inputDecimal() {
-    if (calc.error) return;
-    if (calc.waitingForSecondOperand) {
-      calc.displayValue = "0.";
-      calc.waitingForSecondOperand = false;
-      return;
-    }
-    if (calc.displayValue.indexOf(".") === -1) {
-      calc.displayValue += ".";
-    }
-  }
-
-  function toggleSign() {
-    if (calc.error) return;
-    if (calc.displayValue === "0") return;
-    if (calc.displayValue.charAt(0) === "-") {
-      calc.displayValue = calc.displayValue.slice(1);
-    } else {
-      calc.displayValue = "-" + calc.displayValue;
-    }
-  }
-
-  function handlePercent() {
-    if (calc.error) return;
-    if (calc.waitingForSecondOperand) return;
-
-    var current = parseFloat(calc.displayValue);
-    if (isNaN(current)) return;
-
-    if (calc.firstOperand !== null && calc.operator !== null) {
-      if (calc.operator === "+" || calc.operator === "-") {
-        current = calc.firstOperand * (current / 100);
-      } else {
-        current = current / 100;
-      }
-    } else {
-      current = current / 100;
-    }
-    calc.displayValue = formatNumber(current);
-  }
-
-  function clearEntryOrAll() {
-    if (calc.error) {
-      allClear();
-      return;
-    }
-    var showC =
-      calc.displayValue !== "0" ||
-      calc.waitingForSecondOperand ||
-      calc.firstOperand !== null ||
-      calc.operator !== null;
-    if (showC && !calc.waitingForSecondOperand) {
-      calc.displayValue = "0";
-    } else {
-      allClear();
-    }
-  }
-
-  function allClear() {
-    calc.displayValue = "0";
-    calc.firstOperand = null;
-    calc.operator = null;
-    calc.waitingForSecondOperand = false;
-    calc.error = false;
-  }
-
-  function performCalculation(op, first, second) {
-    switch (op) {
-      case "+": return first + second;
-      case "-": return first - second;
-      case "*": return first * second;
-      case "/": return second === 0 ? Infinity : first / second;
-      default: return second;
-    }
-  }
-
-  function handleOperator(nextOp) {
-    if (calc.error) return;
-
-    var inputValue = parseFloat(calc.displayValue);
-    if (isNaN(inputValue)) inputValue = 0;
-
-    if (calc.operator && calc.waitingForSecondOperand) {
-      calc.operator = nextOp;
-      return;
-    }
-
-    if (calc.firstOperand === null) {
-      calc.firstOperand = inputValue;
-    } else if (calc.operator) {
-      var result = performCalculation(calc.operator, calc.firstOperand, inputValue);
-      if (!isFinite(result)) {
-        setError();
-        return;
-      }
-      calc.displayValue = formatNumber(result);
-      calc.firstOperand = result;
-    }
-
-    calc.waitingForSecondOperand = true;
-    calc.operator = nextOp;
-  }
-
-  function handleEquals() {
-    if (calc.error) return;
-    if (calc.operator === null) return;
-    if (calc.waitingForSecondOperand) return;
-
-    var second = parseFloat(calc.displayValue);
-    if (isNaN(second)) second = 0;
-
-    var result = performCalculation(calc.operator, calc.firstOperand, second);
-    if (!isFinite(result)) {
-      setError();
-      return;
-    }
-    calc.displayValue = formatNumber(result);
-    calc.firstOperand = null;
-    calc.operator = null;
-    calc.waitingForSecondOperand = false;
-  }
-
-  function backspace() {
-    if (calc.error) return;
-    if (calc.waitingForSecondOperand) return;
-    if (calc.displayValue.length <= 1 || (calc.displayValue.length === 2 && calc.displayValue.charAt(0) === "-")) {
-      calc.displayValue = "0";
-    } else {
-      calc.displayValue = calc.displayValue.slice(0, -1);
-    }
-  }
-
-  function setError() {
-    calc.displayValue = "Error";
-    calc.firstOperand = null;
-    calc.operator = null;
-    calc.waitingForSecondOperand = false;
-    calc.error = true;
+  function isOperator(t) {
+    return t === "+" || t === "-" || t === "*" || t === "/";
   }
 
   function toSymbol(op) {
@@ -220,31 +27,345 @@
     return op;
   }
 
+  function digitsCount(s) {
+    var c = 0;
+    for (var i = 0; i < s.length; i++) {
+      var ch = s.charAt(i);
+      if (ch >= "0" && ch <= "9") c++;
+    }
+    return c;
+  }
+
   function formatNumber(n) {
     if (!isFinite(n)) return "Error";
-    // Round to avoid floating point artifacts, keep reasonable precision
     var rounded = Number(n.toPrecision(12));
     var s = String(rounded);
 
-    // Use exponential for very large/small numbers
     var abs = Math.abs(rounded);
     if ((abs !== 0 && abs < 1e-6) || abs >= 1e12) {
       return rounded.toExponential(8).replace("+", "");
     }
 
-    // Trim trailing zeros after decimal
     if (s.indexOf(".") !== -1) {
       s = s.replace(/\.?0+$/, "");
     }
 
-    // If still too long, fallback to exponential
     if (s.replace("-", "").length > 16) {
       return rounded.toExponential(8).replace("+", "");
     }
     return s;
   }
 
-  // Click handling (event delegation)
+  function getDisplayText() {
+    if (state.error) return "Error";
+    var parts = [];
+    for (var i = 0; i < state.tokens.length; i++) {
+      var t = state.tokens[i];
+      parts.push(typeof t === "number" ? formatNumber(t) : toSymbol(t));
+    }
+    var expr = parts.join(" ");
+    if (state.currentEntry !== "") {
+      return expr ? expr + " " + state.currentEntry : state.currentEntry;
+    }
+    return expr || "0";
+  }
+
+  function updateDisplay() {
+    displayEl.textContent = getDisplayText();
+    updateClearKey();
+    updateActiveOperator();
+  }
+
+  function updateClearKey() {
+    var clearBtn = keysEl.querySelector('[data-action="clear"]');
+    var showC =
+      state.error ||
+      state.justEvaluated ||
+      state.tokens.length > 0 ||
+      (state.currentEntry !== "" && state.currentEntry !== "0");
+    clearBtn.textContent = showC ? "C" : "AC";
+    clearBtn.setAttribute("aria-label", showC ? "Clear Entry" : "All Clear");
+  }
+
+  function updateActiveOperator() {
+    var ops = keysEl.querySelectorAll('[data-action="operator"]');
+    for (var i = 0; i < ops.length; i++) ops[i].classList.remove("active");
+
+    if (state.currentEntry === "" && isOperator(last(state.tokens))) {
+      var op = last(state.tokens);
+      for (var j = 0; j < ops.length; j++) {
+        if (ops[j].dataset.operator === op) {
+          ops[j].classList.add("active");
+          break;
+        }
+      }
+    }
+  }
+
+  // Input handlers
+  function inputDigit(d) {
+    if (state.error) return;
+
+    if (state.justEvaluated) {
+      state.tokens = [];
+      state.currentEntry = d;
+      state.justEvaluated = false;
+      return;
+    }
+
+    if (state.currentEntry === "") {
+      state.currentEntry = d;
+      return;
+    }
+
+    if (state.currentEntry === "0") {
+      state.currentEntry = d;
+      return;
+    }
+
+    if (state.currentEntry === "-0") {
+      state.currentEntry = "-" + d;
+      return;
+    }
+
+    if (digitsCount(state.currentEntry) < 16) {
+      state.currentEntry += d;
+    }
+  }
+
+  function inputDecimal() {
+    if (state.error) return;
+
+    if (state.justEvaluated) {
+      state.tokens = [];
+      state.currentEntry = "0.";
+      state.justEvaluated = false;
+      return;
+    }
+
+    if (state.currentEntry === "") {
+      state.currentEntry = "0.";
+      return;
+    }
+
+    if (state.currentEntry.indexOf(".") === -1) {
+      state.currentEntry += ".";
+    }
+  }
+
+  function toggleSign() {
+    if (state.error) return;
+
+    if (state.currentEntry === "") {
+      state.currentEntry = "-0";
+      state.justEvaluated = false;
+      return;
+    }
+
+    if (state.currentEntry === "0") {
+      state.currentEntry = "-0";
+      state.justEvaluated = false;
+      return;
+    }
+
+    if (state.currentEntry.charAt(0) === "-") {
+      state.currentEntry = state.currentEntry.slice(1);
+    } else {
+      state.currentEntry = "-" + state.currentEntry;
+    }
+    state.justEvaluated = false;
+  }
+
+  function handlePercent() {
+    if (state.error) return;
+
+    var entry = state.currentEntry === "" ? "0" : state.currentEntry;
+    var current = parseFloat(entry);
+    if (isNaN(current)) return;
+
+    if (state.tokens.length >= 2 && isOperator(last(state.tokens)) && typeof state.tokens[state.tokens.length - 2] === "number") {
+      var op = last(state.tokens);
+      var base = state.tokens[state.tokens.length - 2];
+      if (op === "+" || op === "-") {
+        current = base * (current / 100);
+      } else {
+        current = current / 100;
+      }
+    } else {
+      current = current / 100;
+    }
+
+    state.currentEntry = formatNumber(current);
+    state.justEvaluated = false;
+  }
+
+  function clearEntryOrAll() {
+    if (state.error) {
+      allClear();
+      return;
+    }
+    var showC =
+      state.error ||
+      state.justEvaluated ||
+      state.tokens.length > 0 ||
+      (state.currentEntry !== "" && state.currentEntry !== "0");
+    if (showC) {
+      state.currentEntry = "0";
+      state.justEvaluated = false;
+    } else {
+      allClear();
+    }
+  }
+
+  function allClear() {
+    state.tokens = [];
+    state.currentEntry = "0";
+    state.justEvaluated = false;
+    state.error = false;
+  }
+
+  function pressOperator(nextOp) {
+    if (state.error) return;
+
+    if (state.justEvaluated) {
+      var numAfterEquals = parseFloat(state.currentEntry);
+      if (!isFinite(numAfterEquals)) {
+        setError();
+        return;
+      }
+      state.tokens = [numAfterEquals, nextOp];
+      state.currentEntry = "";
+      state.justEvaluated = false;
+      return;
+    }
+
+    if (state.currentEntry !== "") {
+      var num = parseFloat(state.currentEntry);
+      if (!isFinite(num)) {
+        setError();
+        return;
+      }
+      state.tokens.push(num);
+      state.currentEntry = "";
+    }
+
+    if (state.tokens.length === 0) {
+      // Operator pressed first: assume leading 0
+      state.tokens.push(0);
+    }
+
+    if (isOperator(last(state.tokens))) {
+      // Replace operator
+      state.tokens[state.tokens.length - 1] = nextOp;
+    } else {
+      state.tokens.push(nextOp);
+    }
+  }
+
+  function evaluateWithPrecedence(t) {
+    if (!t.length) return NaN;
+
+    // First pass: resolve * and /
+    var out = [t[0]];
+    for (var i = 1; i < t.length; i += 2) {
+      var op = t[i];
+      var rhs = t[i + 1];
+      if (op === "*" || op === "/") {
+        var lhs = out[out.length - 1];
+        var v = op === "*" ? lhs * rhs : (rhs === 0 ? Infinity : lhs / rhs);
+        out[out.length - 1] = v;
+      } else {
+        out.push(op, rhs);
+      }
+    }
+
+    // Second pass: resolve + and -
+    var result = out[0];
+    for (var j = 1; j < out.length; j += 2) {
+      var op2 = out[j];
+      var rhs2 = out[j + 1];
+      result = op2 === "+" ? result + rhs2 : result - rhs2;
+    }
+    return result;
+  }
+
+  function handleEquals() {
+    if (state.error) return;
+
+    // Build a copy of tokens including current entry
+    var t = state.tokens.slice();
+    if (state.currentEntry !== "") {
+      var n = parseFloat(state.currentEntry);
+      if (!isFinite(n)) {
+        setError();
+        updateDisplay();
+        return;
+      }
+      t.push(n);
+    }
+
+    // Remove trailing operator(s)
+    while (t.length && isOperator(last(t))) t.pop();
+
+    if (t.length === 0) {
+      // Nothing to evaluate; keep current entry as-is
+      state.justEvaluated = true;
+      updateDisplay();
+      return;
+    }
+
+    // Ensure expression starts with a number
+    if (typeof t[0] !== "number") {
+      t.unshift(0);
+    }
+
+    var result = evaluateWithPrecedence(t);
+
+    if (!isFinite(result)) {
+      setError();
+      updateDisplay();
+      return;
+    }
+
+    state.tokens = [];
+    state.currentEntry = formatNumber(result);
+    state.justEvaluated = true;
+  }
+
+  function backspace() {
+    if (state.error) return;
+
+    // If just evaluated, allow editing the result
+    if (state.justEvaluated) state.justEvaluated = false;
+
+    if (state.currentEntry === "") {
+      // Delete trailing operator or pull back last number to edit
+      if (state.tokens.length > 0) {
+        var t = last(state.tokens);
+        if (isOperator(t)) {
+          state.tokens.pop();
+        } else if (typeof t === "number") {
+          state.currentEntry = String(t);
+          state.tokens.pop();
+        }
+      }
+      return;
+    }
+
+    var s = state.currentEntry;
+    var ns = s.slice(0, -1);
+    if (ns === "" || ns === "-") ns = "0";
+    state.currentEntry = ns;
+  }
+
+  function setError() {
+    state.tokens = [];
+    state.currentEntry = "Error";
+    state.error = true;
+    state.justEvaluated = false;
+  }
+
+  // Click handling
   keysEl.addEventListener("click", function (e) {
     var btn = e.target.closest("button.key");
     if (!btn) return;
@@ -256,7 +377,7 @@
     } else if (action === "decimal") {
       inputDecimal();
     } else if (action === "operator") {
-      handleOperator(btn.dataset.operator);
+      pressOperator(btn.dataset.operator);
     } else if (action === "equals") {
       handleEquals();
     } else if (action === "clear") {
@@ -265,6 +386,8 @@
       toggleSign();
     } else if (action === "percent") {
       handlePercent();
+    } else if (action === "delete") {
+      backspace();
     }
 
     updateDisplay();
@@ -279,24 +402,23 @@
     } else if (k === ".") {
       inputDecimal();
     } else if (k === "+" || k === "-" || k === "*" || k === "/") {
-      handleOperator(k);
+      pressOperator(k);
     } else if (k === "Enter" || k === "=") {
-      // Prevent form submissions if embedded
       e.preventDefault();
       handleEquals();
-    } else if (k === "Backspace") {
+    } else if (k === "Backspace" || k === "Delete") {
       backspace();
     } else if (k === "Escape") {
       allClear();
     } else if (k === "%") {
       handlePercent();
     } else {
-      return; // Ignore other keys
+      return;
     }
 
     updateDisplay();
   });
 
-  // Initialize UI
+  // Initialize
   updateDisplay();
 })();

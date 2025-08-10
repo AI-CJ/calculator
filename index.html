@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Calculator</title>
-  <meta name="description" content="A simple yet sleek responsive calculator built with HTML, CSS, and JavaScript." />
+  <meta name="description" content="A simple, responsive calculator built with HTML, CSS, and JavaScript." />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -18,7 +18,6 @@
       <div class="display" aria-live="polite" aria-atomic="true">
         <div class="value" id="display">0</div>
       </div>
-      <div class="subline" id="trail" aria-hidden="true"></div>
 
       <div class="keys" id="keys">
         <!-- Row: AC ± % ÷ -->
@@ -45,9 +44,10 @@
         <button class="key" data-action="digit" data-digit="3">3</button>
         <button class="key op" data-action="operator" data-operator="+" aria-label="Add">+</button>
 
-        <!-- Row: 0 . = -->
-        <button class="key span-2" data-action="digit" data-digit="0">0</button>
+        <!-- Row: 0 . DEL = -->
+        <button class="key" data-action="digit" data-digit="0">0</button>
         <button class="key" data-action="decimal" aria-label="Decimal point">.</button>
+        <button class="key fn" data-action="delete" aria-label="Delete last character">DEL</button>
         <button class="key op" data-action="equals" aria-label="Equals">=</button>
       </div>
     </section>
