@@ -1,12 +1,25 @@
 :root {
-  /* Emerald + terracotta UI; deeper marine/onyx background */
+  /* UI palette and radii */
   --text: #ecfbff;
   --subtle: #b8d6de;
 
-  --key: #0f3a36;     /* emerald keys */
-  --key-fn: #0c302c;  /* deeper emerald for function keys */
-  --op: #e07a5f;      /* terracotta */
-  --op-alt: #c7654f;  /* darker terracotta */
+  /* Lighter keys */
+  --key: #195f56;         /* emerald base (lighter than before) */
+  --key-top: #248273;     /* lighter top for subtle vertical depth */
+
+  --key-fn: #164f47;      /* function key base */
+  --key-fn-top: #1f6b61;  /* function key top */
+
+  /* Terracotta operators (lightened) */
+  --op: #e7886d;
+  --op-alt: #d6745d;      /* bottom stop */
+  --op-top: #f0a48e;      /* top stop */
+
+  /* Wispy overlays */
+  --btn-wisp-emerald: rgba(140, 255, 224, 0.18);
+  --btn-wisp-onyx: rgba(10, 14, 18, 0.22);
+  --btn-wisp-terra: rgba(255, 210, 196, 0.18);
+  --btn-wisp-onyx-strong: rgba(8, 12, 16, 0.26);
 
   --shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
   --radius: 16px;
@@ -24,13 +37,13 @@ body {
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
   color: var(--text);
 
-  /* Even deeper blue/onyx with airy marine wisps */
+  /* Deeper blue/onyx with airy marine wisps (page background) */
   background:
-    radial-gradient(1200px 900px at 18% -12%, rgba(115, 227, 255, 0.16) 0%, transparent 60%),
-    radial-gradient(900px 700px at 120% 10%, rgba(64, 181, 205, 0.16) 0%, transparent 60%),
+    radial-gradient(1200px 900px at 18% -12%, rgba(115, 227, 255, 0.201) 0%, transparent 60%),
+    radial-gradient(900px 700px at 120% 10%, rgba(64, 182, 205, 0.205) 0%, transparent 60%),
     radial-gradient(900px 900px at -20% 120%, rgba(21, 94, 117, 0.22) 0%, transparent 60%),
-    radial-gradient(700px 700px at 85% 120%, rgba(3, 8, 12, 0.58) 0%, transparent 65%),  /* deeper onyx wisp */
-    radial-gradient(600px 600px at -10% 40%, rgba(2, 6, 10, 0.55) 0%, transparent 70%), /* deeper onyx wisp */
+    radial-gradient(700px 700px at 85% 120%, rgba(3, 8, 12, 0.58) 0%, transparent 65%),
+    radial-gradient(600px 600px at -10% 40%, rgba(2, 6, 10, 0.55) 0%, transparent 70%),
     linear-gradient(180deg, #041017, #030c12 55%, #02080d);
   display: grid;
   place-items: center;
@@ -40,9 +53,15 @@ body {
 .calc-wrap { width: 100%; max-width: 420px; }
 
 .calculator {
-  background: rgba(6, 26, 32, 0.7); /* marine-tinted glass, darker */
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,0.06);
+  /* Lighter case with light emerald + onyx wispy texture */
+  background:
+    radial-gradient(460px 340px at 15% -15%, rgba(84, 230, 196, 0.082) 0%, rgba(84, 230, 196, 0) 60%),
+    radial-gradient(420px 380px at 105% 120%, rgba(10, 14, 18, 0.26) 0%, rgba(10, 14, 18, 0) 66%),
+    radial-gradient(360px 360px at -10% 85%, rgba(8, 12, 16, 0.22) 0%, rgba(8, 12, 16, 0) 70%),
+    linear-gradient(180deg, rgba(42, 108, 96, 0.38), rgba(28, 78, 70, 0.38));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   overflow: hidden;
@@ -53,7 +72,7 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 14px 16px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+  background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.025));
 }
 
 .brand {
@@ -82,7 +101,7 @@ body {
   /* Keep content anchored on the right; overflow clips on the left */
   flex: 0 0 auto;
   display: inline-block;
-  width: max-content;  /* grow to content width so it can extend left */
+  width: max-content;
   max-width: none;
   text-align: right;
 
@@ -103,23 +122,33 @@ body {
 
 button.key {
   appearance: none;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.10);
   border-radius: 14px;
-  background: var(--key);
+
+  /* Light, wispy emerald + onyx texture on all numeric keys */
+  background:
+    radial-gradient(140% 160% at 90% -30%, var(--btn-wisp-emerald) 0%, rgba(0,0,0,0) 60%),
+    radial-gradient(130% 130% at -10% 130%, var(--btn-wisp-onyx) 0%, rgba(0,0,0,0) 66%),
+    linear-gradient(180deg, var(--key-top), var(--key));
+
   color: var(--text);
   font-size: clamp(16px, 4.2vw, 20px);
   font-weight: 600;
   padding: 0;
   cursor: pointer;
-  transition: transform 0.06s ease, background 0.2s ease, box-shadow 0.2s ease, color 0.2s ease, filter 0.2s ease;
-  box-shadow: inset 0 -2px 0 rgba(255,255,255,0.03);
+  transition: transform 0.06s ease, background 0.2s ease, box-shadow 0.2s ease, color 0.2s ease, filter 0.2s ease, border-color 0.2s ease;
+  box-shadow:
+    inset 0 -2px 0 rgba(255,255,255,0.06),
+    0 1px 0 rgba(255,255,255,0.05);
   aspect-ratio: 1 / 1;
   display: grid;
   place-items: center;
   user-select: none;
+  backdrop-filter: saturate(1.05);
+  -webkit-backdrop-filter: saturate(1.05);
 }
 
-button.key:hover { filter: brightness(1.06); }
+button.key:hover { filter: brightness(1.08); }
 
 button.key:active {
   transform: translateY(1px) scale(0.99);
@@ -128,23 +157,33 @@ button.key:active {
 
 button.key:focus-visible {
   outline: none;
-  box-shadow: var(--ring);
+  box-shadow: 0 0 0 0 rgba(0,0,0,0), var(--ring);
 }
 
 button.key.fn {
-  background: var(--key-fn);
-  color: #d7eef3;
+  /* Function keys: slightly deeper emerald, still wispy */
+  background:
+    radial-gradient(140% 160% at 90% -30%, var(--btn-wisp-emerald) 0%, rgba(0,0,0,0) 60%),
+    radial-gradient(130% 130% at -10% 130%, var(--btn-wisp-onyx-strong) 0%, rgba(0,0,0,0) 66%),
+    linear-gradient(180deg, var(--key-fn-top), var(--key-fn));
+  color: #dff7f1;
 }
-button.key.fn:focus-visible { box-shadow: var(--ring-fn); }
+
+button.key.fn:focus-visible { box-shadow: 0 0 0 0 rgba(0,0,0,0), var(--ring-fn); }
 
 button.key.op {
-  background: linear-gradient(180deg, var(--op), var(--op-alt));
+  /* Operator keys: lighter terracotta with wisps */
+  border-color: rgba(255, 255, 255, 0.14);
+  background:
+    radial-gradient(140% 160% at 90% -30%, var(--btn-wisp-terra) 0%, rgba(0,0,0,0) 60%),
+    radial-gradient(130% 130% at -10% 130%, rgba(24, 16, 12, 0.22) 0%, rgba(0,0,0,0) 66%),
+    linear-gradient(180deg, var(--op-top), var(--op));
   color: #171717;
-  text-shadow: 0 1px 0 rgba(255,255,255,0.2);
+  text-shadow: 0 1px 0 rgba(255,255,255,0.25);
 }
 
 button.key.op.active {
-  filter: saturate(1.05) brightness(0.95);
+  filter: saturate(1.05) brightness(0.96);
   box-shadow: 0 0 0 2px rgba(224, 122, 95, 0.6), inset 0 -2px 0 rgba(0,0,0,0.15);
 }
 
