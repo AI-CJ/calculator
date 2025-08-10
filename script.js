@@ -4,7 +4,7 @@
   var displayEl = document.getElementById("display");
   var keysEl = document.getElementById("keys");
 
-  // State: build a tokenized expression; evaluate only on "=" with precedence
+  // State: tokenized expression; evaluate on "=" with precedence
   var state = {
     tokens: [],          // e.g., [2, "+", 3, "*", 4]
     currentEntry: "0",   // string user is typing
@@ -12,47 +12,50 @@
     error: false
   };
 
-  function last(arr) {
-    return arr.length ? arr[arr.length - 1] : undefined;
-  }
+  var SIG = 12;                // "real calculator" style: 12 significant digits
+  var EXP_LOW = 1e-6;          // show exponent if |n| < EXP_LOW (and not zero)
+  var EXP_HIGH = 1e12;         // show exponent if |n| >= EXP_HIGH
 
-  function isOperator(t) {
-    return t === "+" || t === "-" || t === "*" || t === "/";
-  }
+  function last(arr) { return arr.length ? arr[arr.length - 1] : undefined; }
+  function isOperator(t) { return t === "+" || t === "-" || t === "*" || t === "/"; }
+  function toSymbol(op) { return op === "/" ? "÷" : op === "*" ? "×" : op === "-" ? "−" : op; }
 
-  function toSymbol(op) {
-    if (op === "/") return "÷";
-    if (op === "*") return "×";
-    if (op === "-") return "−";
-    return op;
-  }
-
-  function digitsCount(s) {
-    var c = 0;
-    for (var i = 0; i < s.length; i++) {
-      var ch = s.charAt(i);
-      if (ch >= "0" && ch <= "9") c++;
+  // Half-up rounding to N significant digits
+  function roundToSig(n, sig) {
+    if (!isFinite(n)) return n;
+    if (n === 0) return 0;
+    var neg = n < 0;
+    var abs = Math.abs(n);
+    var exp = Math.floor(Math.log10(abs));
+    var scale = sig - exp - 1;
+    var result;
+    if (scale >= 0) {
+      var f = Math.pow(10, scale);
+      result = Math.round(abs * f) / f;
+    } else {
+      var inv = Math.pow(10, -scale);
+      result = Math.round(abs / inv) * inv;
     }
-    return c;
+    return neg ? -result : result;
   }
 
+  // Format with 12 sig digits, exponent fallback; strip trailing zeros
   function formatNumber(n) {
     if (!isFinite(n)) return "Error";
-    var rounded = Number(n.toPrecision(12));
-    var s = String(rounded);
 
-    var abs = Math.abs(rounded);
-    if ((abs !== 0 && abs < 1e-6) || abs >= 1e12) {
-      return rounded.toExponential(8).replace("+", "");
+    var x = roundToSig(n, SIG);
+    var abs = Math.abs(x);
+
+    if (abs !== 0 && (abs < EXP_LOW || abs >= EXP_HIGH)) {
+      // 12 sig digits total => toExponential(11) after the leading digit
+      return x.toExponential(SIG - 1).replace("+", "");
     }
 
-    if (s.indexOf(".") !== -1) {
-      s = s.replace(/\.?0+$/, "");
-    }
-
-    if (s.replace("-", "").length > 16) {
-      return rounded.toExponential(8).replace("+", "");
-    }
+    // Choose decimals so total significant digits <= SIG
+    var intDigits = abs >= 1 ? Math.floor(Math.log10(abs)) + 1 : 1;
+    var decimals = Math.max(0, SIG - intDigits);
+    var s = x.toFixed(decimals);
+    s = s.replace(/\.?0+$/, ""); // remove trailing zeros and stray dot
     return s;
   }
 
@@ -72,25 +75,13 @@
 
   function updateDisplay() {
     displayEl.textContent = getDisplayText();
-    updateClearKey();
     updateActiveOperator();
-  }
-
-  function updateClearKey() {
-    var clearBtn = keysEl.querySelector('[data-action="clear"]');
-    var showC =
-      state.error ||
-      state.justEvaluated ||
-      state.tokens.length > 0 ||
-      (state.currentEntry !== "" && state.currentEntry !== "0");
-    clearBtn.textContent = showC ? "C" : "AC";
-    clearBtn.setAttribute("aria-label", showC ? "Clear Entry" : "All Clear");
+    // No scrollbars needed; CSS right-anchors content and clips left overflow.
   }
 
   function updateActiveOperator() {
     var ops = keysEl.querySelectorAll('[data-action="operator"]');
     for (var i = 0; i < ops.length; i++) ops[i].classList.remove("active");
-
     if (state.currentEntry === "" && isOperator(last(state.tokens))) {
       var op = last(state.tokens);
       for (var j = 0; j < ops.length; j++) {
@@ -100,6 +91,16 @@
         }
       }
     }
+  }
+
+  // Helpers
+  function digitsCount(s) {
+    var c = 0;
+    for (var i = 0; i < s.length; i++) {
+      var ch = s.charAt(i);
+      if (ch >= "0" && ch <= "9") c++;
+    }
+    return c;
   }
 
   // Input handlers
@@ -113,24 +114,11 @@
       return;
     }
 
-    if (state.currentEntry === "") {
-      state.currentEntry = d;
-      return;
-    }
+    if (state.currentEntry === "") { state.currentEntry = d; return; }
+    if (state.currentEntry === "0") { state.currentEntry = d; return; }
+    if (state.currentEntry === "-0") { state.currentEntry = "-" + d; return; }
 
-    if (state.currentEntry === "0") {
-      state.currentEntry = d;
-      return;
-    }
-
-    if (state.currentEntry === "-0") {
-      state.currentEntry = "-" + d;
-      return;
-    }
-
-    if (digitsCount(state.currentEntry) < 16) {
-      state.currentEntry += d;
-    }
+    if (digitsCount(state.currentEntry) < 16) state.currentEntry += d;
   }
 
   function inputDecimal() {
@@ -142,37 +130,18 @@
       state.justEvaluated = false;
       return;
     }
-
-    if (state.currentEntry === "") {
-      state.currentEntry = "0.";
-      return;
-    }
-
-    if (state.currentEntry.indexOf(".") === -1) {
-      state.currentEntry += ".";
-    }
+    if (state.currentEntry === "") { state.currentEntry = "0."; return; }
+    if (state.currentEntry.indexOf(".") === -1) state.currentEntry += ".";
   }
 
   function toggleSign() {
     if (state.error) return;
 
-    if (state.currentEntry === "") {
-      state.currentEntry = "-0";
-      state.justEvaluated = false;
-      return;
-    }
+    if (state.currentEntry === "") { state.currentEntry = "-0"; state.justEvaluated = false; return; }
+    if (state.currentEntry === "0") { state.currentEntry = "-0"; state.justEvaluated = false; return; }
 
-    if (state.currentEntry === "0") {
-      state.currentEntry = "-0";
-      state.justEvaluated = false;
-      return;
-    }
-
-    if (state.currentEntry.charAt(0) === "-") {
-      state.currentEntry = state.currentEntry.slice(1);
-    } else {
-      state.currentEntry = "-" + state.currentEntry;
-    }
+    if (state.currentEntry.charAt(0) === "-") state.currentEntry = state.currentEntry.slice(1);
+    else state.currentEntry = "-" + state.currentEntry;
     state.justEvaluated = false;
   }
 
@@ -186,11 +155,8 @@
     if (state.tokens.length >= 2 && isOperator(last(state.tokens)) && typeof state.tokens[state.tokens.length - 2] === "number") {
       var op = last(state.tokens);
       var base = state.tokens[state.tokens.length - 2];
-      if (op === "+" || op === "-") {
-        current = base * (current / 100);
-      } else {
-        current = current / 100;
-      }
+      if (op === "+" || op === "-") current = base * (current / 100);
+      else current = current / 100;
     } else {
       current = current / 100;
     }
@@ -199,24 +165,7 @@
     state.justEvaluated = false;
   }
 
-  function clearEntryOrAll() {
-    if (state.error) {
-      allClear();
-      return;
-    }
-    var showC =
-      state.error ||
-      state.justEvaluated ||
-      state.tokens.length > 0 ||
-      (state.currentEntry !== "" && state.currentEntry !== "0");
-    if (showC) {
-      state.currentEntry = "0";
-      state.justEvaluated = false;
-    } else {
-      allClear();
-    }
-  }
-
+  // Always All Clear (label stays "AC")
   function allClear() {
     state.tokens = [];
     state.currentEntry = "0";
@@ -229,10 +178,7 @@
 
     if (state.justEvaluated) {
       var numAfterEquals = parseFloat(state.currentEntry);
-      if (!isFinite(numAfterEquals)) {
-        setError();
-        return;
-      }
+      if (!isFinite(numAfterEquals)) { setError(); return; }
       state.tokens = [numAfterEquals, nextOp];
       state.currentEntry = "";
       state.justEvaluated = false;
@@ -241,22 +187,15 @@
 
     if (state.currentEntry !== "") {
       var num = parseFloat(state.currentEntry);
-      if (!isFinite(num)) {
-        setError();
-        return;
-      }
+      if (!isFinite(num)) { setError(); return; }
       state.tokens.push(num);
       state.currentEntry = "";
     }
 
-    if (state.tokens.length === 0) {
-      // Operator pressed first: assume leading 0
-      state.tokens.push(0);
-    }
+    if (state.tokens.length === 0) state.tokens.push(0); // operator first => leading 0
 
     if (isOperator(last(state.tokens))) {
-      // Replace operator
-      state.tokens[state.tokens.length - 1] = nextOp;
+      state.tokens[state.tokens.length - 1] = nextOp; // replace operator
     } else {
       state.tokens.push(nextOp);
     }
@@ -265,26 +204,28 @@
   function evaluateWithPrecedence(t) {
     if (!t.length) return NaN;
 
-    // First pass: resolve * and /
+    // First pass: * and /
     var out = [t[0]];
     for (var i = 1; i < t.length; i += 2) {
       var op = t[i];
       var rhs = t[i + 1];
       if (op === "*" || op === "/") {
         var lhs = out[out.length - 1];
-        var v = op === "*" ? lhs * rhs : (rhs === 0 ? Infinity : lhs / rhs);
+        var v = (op === "*") ? (lhs * rhs) : (rhs === 0 ? Infinity : lhs / rhs);
+        v = roundToSig(v, SIG); // round intermediate
         out[out.length - 1] = v;
       } else {
         out.push(op, rhs);
       }
     }
 
-    // Second pass: resolve + and -
+    // Second pass: + and -
     var result = out[0];
     for (var j = 1; j < out.length; j += 2) {
       var op2 = out[j];
       var rhs2 = out[j + 1];
-      result = op2 === "+" ? result + rhs2 : result - rhs2;
+      result = (op2 === "+") ? (result + rhs2) : (result - rhs2);
+      result = roundToSig(result, SIG);
     }
     return result;
   }
@@ -292,40 +233,19 @@
   function handleEquals() {
     if (state.error) return;
 
-    // Build a copy of tokens including current entry
     var t = state.tokens.slice();
     if (state.currentEntry !== "") {
       var n = parseFloat(state.currentEntry);
-      if (!isFinite(n)) {
-        setError();
-        updateDisplay();
-        return;
-      }
+      if (!isFinite(n)) { setError(); updateDisplay(); return; }
       t.push(n);
     }
 
-    // Remove trailing operator(s)
     while (t.length && isOperator(last(t))) t.pop();
-
-    if (t.length === 0) {
-      // Nothing to evaluate; keep current entry as-is
-      state.justEvaluated = true;
-      updateDisplay();
-      return;
-    }
-
-    // Ensure expression starts with a number
-    if (typeof t[0] !== "number") {
-      t.unshift(0);
-    }
+    if (t.length === 0) { state.justEvaluated = true; updateDisplay(); return; }
+    if (typeof t[0] !== "number") t.unshift(0);
 
     var result = evaluateWithPrecedence(t);
-
-    if (!isFinite(result)) {
-      setError();
-      updateDisplay();
-      return;
-    }
+    if (!isFinite(result)) { setError(); updateDisplay(); return; }
 
     state.tokens = [];
     state.currentEntry = formatNumber(result);
@@ -335,19 +255,14 @@
   function backspace() {
     if (state.error) return;
 
-    // If just evaluated, allow editing the result
     if (state.justEvaluated) state.justEvaluated = false;
 
     if (state.currentEntry === "") {
-      // Delete trailing operator or pull back last number to edit
+      // Remove trailing operator or bring last number back to edit
       if (state.tokens.length > 0) {
         var t = last(state.tokens);
-        if (isOperator(t)) {
-          state.tokens.pop();
-        } else if (typeof t === "number") {
-          state.currentEntry = String(t);
-          state.tokens.pop();
-        }
+        if (isOperator(t)) state.tokens.pop();
+        else if (typeof t === "number") { state.currentEntry = String(t); state.tokens.pop(); }
       }
       return;
     }
@@ -372,23 +287,14 @@
 
     var action = btn.dataset.action;
 
-    if (action === "digit") {
-      inputDigit(btn.dataset.digit);
-    } else if (action === "decimal") {
-      inputDecimal();
-    } else if (action === "operator") {
-      pressOperator(btn.dataset.operator);
-    } else if (action === "equals") {
-      handleEquals();
-    } else if (action === "clear") {
-      clearEntryOrAll();
-    } else if (action === "sign") {
-      toggleSign();
-    } else if (action === "percent") {
-      handlePercent();
-    } else if (action === "delete") {
-      backspace();
-    }
+    if (action === "digit") inputDigit(btn.dataset.digit);
+    else if (action === "decimal") inputDecimal();
+    else if (action === "operator") pressOperator(btn.dataset.operator);
+    else if (action === "equals") handleEquals();
+    else if (action === "clear") allClear();           // always All Clear
+    else if (action === "sign") toggleSign();
+    else if (action === "percent") handlePercent();
+    else if (action === "delete") backspace();
 
     updateDisplay();
   });
@@ -397,24 +303,14 @@
   window.addEventListener("keydown", function (e) {
     var k = e.key;
 
-    if (k >= "0" && k <= "9") {
-      inputDigit(k);
-    } else if (k === ".") {
-      inputDecimal();
-    } else if (k === "+" || k === "-" || k === "*" || k === "/") {
-      pressOperator(k);
-    } else if (k === "Enter" || k === "=") {
-      e.preventDefault();
-      handleEquals();
-    } else if (k === "Backspace" || k === "Delete") {
-      backspace();
-    } else if (k === "Escape") {
-      allClear();
-    } else if (k === "%") {
-      handlePercent();
-    } else {
-      return;
-    }
+    if (k >= "0" && k <= "9") inputDigit(k);
+    else if (k === ".") inputDecimal();
+    else if (k === "+" || k === "-" || k === "*" || k === "/") pressOperator(k);
+    else if (k === "Enter" || k === "=") { e.preventDefault(); handleEquals(); }
+    else if (k === "Backspace" || k === "Delete") backspace();
+    else if (k === "Escape") allClear();
+    else if (k === "%") handlePercent();
+    else return;
 
     updateDisplay();
   });
