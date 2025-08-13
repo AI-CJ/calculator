@@ -76,7 +76,6 @@
   function updateDisplay() {
     displayEl.textContent = getDisplayText();
     updateActiveOperator();
-    // No scrollbars needed; CSS right-anchors content and clips left overflow.
   }
 
   function updateActiveOperator() {
@@ -103,9 +102,17 @@
     return c;
   }
 
+  function resetFromError(startEntry) {
+    state.tokens = [];
+    state.currentEntry = startEntry;
+    state.error = false;
+    state.justEvaluated = false;
+  }
+
   // Input handlers
   function inputDigit(d) {
-    if (state.error) return;
+    // New: typing a digit after Error resets and starts fresh with that digit
+    if (state.error) { resetFromError(d); return; }
 
     if (state.justEvaluated) {
       state.tokens = [];
@@ -122,7 +129,8 @@
   }
 
   function inputDecimal() {
-    if (state.error) return;
+    // Also sensible: typing '.' after Error starts a fresh "0."
+    if (state.error) { resetFromError("0."); return; }
 
     if (state.justEvaluated) {
       state.tokens = [];
